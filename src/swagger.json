@@ -1,0 +1,1491 @@
+{
+    "openapi": "3.0.0",
+    "info":{
+        "title": "API Gerenciador de Eventos",
+        "description": "Essa API tem como objetivo Gerenciar Eventos, foi desenvolvida para oferecer uma solução completa e eficiente na organização e administração de eventos",
+        "termsOfService":"http://localhost:300/terms",
+        "contact":{
+            "email": "yasmin.d.lim@gmail.com"
+        },
+       "version": "1.0.0"
+    },
+    "paths": {
+        "/login": {
+            "post": {
+                "summary": "Fazer login do usuário",
+                "description": "Esta rota será responsável pelo login do usuário",
+                "tags": ["UserRoutes"],
+                "requestBody": {
+                    "content":{
+                        "application/json": {
+                            "schema":{
+                                "$ref": "#/components/schemas/Login"
+
+                            },
+                            "examples":{
+                                "UserRoutes": {
+                                    "value":{
+                                        "email": "Pedrocabral@gmail.com",
+                                        "senha": "12345"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                   
+                    "200": {
+                        "description": "OK",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                   "type": "object",
+                                   "proprieties": {
+                                    "token": {
+                                        "type": "string",
+                                        "description": "Token de autenticação"
+                                    },
+                                    "user_id": {
+                                        "type": "string",
+                                        "description": "ID do usuário"
+                                    }
+                                }
+                            },
+                            "example":{
+                                "token": "seu_token_aqui",
+                                "user_id": "id_do_usuario_aqui"
+                            }
+                                }
+
+                            }
+                        }
+                        }
+                    }
+                },
+
+            
+            "/events/:event_id/lotes":{
+                "get": {
+                    "description":"Buscar Lote do evento",
+                    "summary": "Buscar Lote do evento",
+                    "tags":["UserRoutes"],
+                    "security": [{ "bearerAuth": [] }],
+                    "parameters":[
+                        {
+                            "name": "event_id",
+                            "in":"query",
+                            "description": "id do evento",
+                            "required":true
+                            
+                        }
+                    ],
+                    "responses":{
+                        "200":{
+                        "description":"OK",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/ApiRespondeget"
+                                    }
+                                },
+                                "example":{
+                                    "uui_lote": "ID do lote",
+                                    "uuid_evento": "ID do evento",
+                                    "preco": "Preço do lote",
+                                    "nome": "Nome do Lote",
+                                    "descriçao": "descrição do lote",
+                                    "ativo": "se o lote está ativo"
+                                }
+                            }
+                        }
+
+                        },
+                        "400":{
+                            "description": "informações inválidas"
+                        }
+                    }
+                }
+                
+            },
+
+            "/register/:event_id":{
+                "post":{
+                    "summary": "Registrar usuário",
+                    "description": "Esta rota será responsável por registrar usuários",
+                    "tags": ["UserRoutes"],
+                    "security": [{ "bearerAuth": [] }],
+                    "requestBody": {
+                        "content":{
+                            "application/json": {
+                                "schema":{
+                                    "$ref": "#/components/schemas/RegistroResponse"
+    
+                                },
+                                "examples":{
+                                    "UserRoutes": {
+                                        "value":{
+                                            "nome": "string",
+                                            "email": "string",
+                                            "nome_cracha": "string",
+                                            "instituicao": "string",
+                                            "atividades": "string",
+                                            "lote_id": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "401": {
+                            "description": "Senha inválida!"
+    
+                        },
+                        "200": {
+                            "description": "OK",
+                            "content":{
+                                "application/json":{
+                                    "schema":{
+                                       "type": "object",
+                                       "proprieties": {
+                                        "uuid_user": {
+                                            "type": "string"
+                                            
+                                        },
+                                        "uuid_lote": {
+                                            "type": "string"
+                                           
+                                        },
+                                        "credenciamento": {
+                                            "type": "boolean"
+                                           
+                                        },
+                                        "id_payment_mercado_pago":{
+                                            "type": "string"
+                                           
+                                        },
+                                        "expiration_datetime": {
+                                            "type": "Date"
+                                           
+                                        },
+                                        "status_pagamento": {
+                                            "type": "array",
+                                            "items":{
+                                                "$ref":"#/components/schemas/StatusPagamentoEnum"
+                                            }
+                                           
+                                        }
+                                    }
+                                },
+                                "example":{
+                                "uuid_user":"string",
+                                "uuid_lote":"string",
+                                "credenciamento":"boolean",
+                                "id_payment_mercado_pago":"string",
+                                "expiration_datetime":"Date",
+                                "status_pagamento":"REALIZADO"
+                                }
+                }
+            }
+        }
+            }
+            }
+        },
+        "/lote/:lote_id/inscricoes/user/:user_id/":{
+            "get":{
+                "description":"Buscar Lote do evento",
+                    "summary": "Buscar Lote do evento",
+                    "tags":["UserRoutes"],
+                    "security": [{ "bearerAuth": [] }],
+                    "parameters":[
+                        {
+                            "name": "event_id",
+                            "in":"params",
+                            "description": "id do evento",
+                            "required":true
+                            
+                        },
+                        {
+                            "name":"lote_id",
+                            "in":"params",
+                            "description":"id do lote",
+                            "required":true
+                        }
+                    ],
+                    "responses":{
+                        "200":{
+                        "description":"OK",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/Respostaget"
+                                    }
+                                },
+                                "example":{
+                                    
+                                    "user_name": "Nome do usuário",
+                                    "inscricao":{
+                                        "status": "Statuspagamento",
+                                        "nome_lote": "lote.nome",
+                                        "preco": "lote.preco"
+                                    },
+                                    "atividades":{
+                                        "nome": "atividade.nome",
+                                        "tipo": "atividade.tipo_atividade"
+                                    }
+                                    
+                                }
+                            }
+                        }
+
+                        },
+                        "400":{
+                            "description":"informações inválidas"
+                        }
+                     
+                    }
+
+            }
+        },
+        "/lote/:lote_id/user/:user_id/realizar-pagemento":{
+            "post":{
+                "summary":"Realizar Pagamento",
+                "description":"EndPoint de realizar pagamento",
+                "tags": ["UserRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"lote_id",
+                    "in":"path",
+                    "description":"Id do lote",
+                    "required":true
+                },
+                {
+                    "name":"user_id",
+                    "in":"path",
+                    "description":"ID do usuário",
+                    "required":true
+                }
+            ],
+            "requestBody": {
+                "content":{
+                    "application/json": {
+                        "schema":{
+                            "$ref": "#/components/schemas/RealizaPagamento"
+
+                        }
+                       
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description": "Valor alterado"
+                },
+                "400":{
+                    "description": "informações inválidas"
+                }
+            }
+    }
+},
+
+        "/events/:id_evento/atividades":{
+             "get":{
+                "description":"Buscar todas as atividades",
+                    "summary": "Buscar as atividades do evento",
+                    "tags":["UserRoutes"],
+                    "security": [{ "bearerAuth": [] }],
+                    "parameters":[
+                        {
+                            "name": "id_evento",
+                            "in":"params",
+                            "description": "id do evento",
+                            "required":true
+                            
+                        }
+                    
+                    ],
+                    "responses":{
+                        "200":{
+                        "description":"OK",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/Tipo_Atividade"
+                                    }
+                                },
+                                "example":{
+                                    
+                                    "enum": [
+                                        "MINICURSO",
+                                        "WORKSHOP",
+                                        "OFICINA",
+                                        "PALESTRA"
+                                      ]
+                                    
+                                }
+                            }
+                        }
+
+                        },
+                        "400":{
+                            "description":"Informações invalidas!"
+                        }
+                     
+                    }
+
+
+         }
+},
+        "/pagamento/user/:user_id/lote/:lote_id":{
+
+            "get":{
+                "description":"Buscar Inscrição do Usuário",
+                    "summary": "Buscar informações da inscrição do usuário",
+                    "tags":["UserRoutes"],
+                    "security": [{ "bearerAuth": [] }],
+                    "parameters":[
+                        {
+                            "name": "user_id",
+                            "in":"params",
+                            "description": "id do evento",
+                            "required":true
+                            
+                        },
+                        {
+                            "name":"lote_id",
+                            "in":"params",
+                            "description":"id do lote",
+                            "required":true
+                        }
+                    ],
+                    "responses":{
+                        "200":{
+                        "description":"OK",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/payment"
+                                    }
+                                },
+                                "example":{
+                                    
+                                    "qr_code_base64":"string",
+                                    "qr_code":"string",
+                                    " ticket_url":"url"
+
+                                    
+                                }
+                            }
+                        }
+
+                        },
+                        "400":{
+                            "description":"Informações invalidas!"
+                        }
+                     
+                    }
+
+
+            }
+        },
+
+        "/event/:event_id/inscricao/:user_id":{
+            "get":{
+                "description":"Buscar Informações do usuário no evento",
+                "summary": "Buscar Informações do usuário no evento",
+                "tags":["UserRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[
+                    {
+                        "name": "user_id",
+                        "in":"params",
+                        "description": "id do evento",
+                        "required":true
+                        
+                    },
+                    {
+                        "name":"event_id",
+                        "in":"params",
+                        "description":"id do lote",
+                        "required":true
+                    }
+                ],
+                "responses":{
+                    "200":{
+                    "description":"OK",
+                    "content":{
+                        "application/json":{
+                            "schema":{
+                                "type":"array",
+                                "items":{
+                                "$ref": "#/components/schemas/getUserInEvent"
+                                }
+                            },
+                            "example":{
+                                
+                                "uuid": "personal_user_information.uuid_user",
+                                "nome":"personal_user_information.nome",
+                                "nome_cracha": "personal_user_information.nome_cracha",
+                                "email": "personal_user_information.email",
+                                "instituicao": "personal_user_information.instituicao",
+                                "atividades": "activities",
+                                "status_pagamento": "user_inscricao?.status_pagamento",
+                                "credenciamento": "user_inscricao?.credenciamento"
+                                
+                            }
+                        }
+                    }
+
+                    },
+                    "400":{
+                        "description":"Informações invalidas!"
+                    }
+                 
+                }
+
+            }
+        },
+        "/admin/user/:user_id":{
+            "put":{
+                "summary":"Atualizar informações do participante",
+                "description":"Atualizar informações do participante",
+                "tags": ["UserRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"user_id",
+                    "in":"params",
+                    "description":"Id do usuário",
+                    "required":true
+                }
+               
+            ],
+            "requestBody": {
+                "content":{
+                    "application/json": {
+                        "schema":{
+                            "$ref": "#/components/schemas/req_body_updateParticipantInformations"
+
+                        }
+                       
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description":"Dados alterados com sucesso!",
+                    "content":{
+                        "application/json":{
+                            "schema":{
+                                "type":"array",
+                                "items":{
+                                "$ref": "#/components/schemas/updatedUser"
+                                }
+                            },
+                            "example":{
+                                
+                                "user_id":"id_do_usuario_aqui",
+                                "nome":"nome",
+                                "nome_cracha":"nome_do_cracha",
+                                "email":"exemplo@gmail.com",
+                                "instituicao":"string",
+                                "status_pagamento":"REALIZADO",
+                                "activities":"minicurso"
+                                
+                            }
+                        }
+                    }
+
+                    },
+                "400":{
+                    "description": "Erro ao atualizar dados do usuário."
+                }
+            }
+            }
+        },
+        "/admin/lote/:lote_id/inscricoes/:user_id":{
+            "put":{
+                "summary":"Atualizar informações do pagamento",
+                "description":"Atualizar informações do pagamento",
+                "tags": ["UserRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"user_id",
+                    "in":"params",
+                    "description":"Id do usuário",
+                    "required":true
+                },
+                {
+                    "name":"lote_id",
+                    "in":"params",
+                    "description":"Id do lote",
+                    "required":true
+                }
+               
+            ],
+            "requestBody": {
+                "content":{
+                    "application/json": {
+                        "schema":{
+                            "$ref": "#/components/schemas/StatusPagamentoEnum"
+
+                        }
+                       
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description":"Alterado com sucesso!"
+                    
+                    },
+                "400":{
+                    "description": "Informações invalidas!"
+                }
+            }
+
+
+
+            }
+        },
+        "/admin/events/:event_id/dashboard":{
+            "get":{
+                "summary":"Pegar informações sobre as finanças",
+                "description":"Pegar informações sobre as finanças",
+                "tags": ["EventRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"event_id",
+                    "in":"params",
+                    "description":"Id do evento",
+                    "required":true
+                }
+                ],
+                "responses":{
+                    "200":{
+                        "description":"Ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/getFinancialInformatio"
+                                    }
+                                },
+                                "example":{
+                                    
+                                    "total_inscritos":100,
+                                    "total_arrecadado":657,
+                                    "inscricoes_pendentes": 400
+                                    
+                                    
+                                }
+                            }
+                        }
+    
+                        },
+                    "500":{
+                        "description": "Erro ao obter informações financeiras"
+                    }
+                }
+
+            }
+        },
+        "/admin/user/:user_id/events":{
+            "get":{
+                "summary":"Pegar o evento de acordo com o id de usuário",
+                "description":"Pegar o evento de acordo com o id de usuário",
+                "tags": ["EventRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"user_id",
+                    "in":"params",
+                    "description":"Id do usuário",
+                    "required":true
+                }
+                ],
+                "responses":{
+                    "200":{
+                        "description":"Ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/evento_get"
+                                    }
+                                },
+                                "example":{
+                                    
+                                    "nome":"nome exemplo",
+                                    "uuid_evento":"id evento"
+                                    
+                                    
+                                    
+                                }
+                            }
+                        }
+    
+                        },
+                    "400":{
+                        "description": "Informação incorreta"
+                    }
+                }
+            }
+        },
+        "/admin/events/:id_evento/inscricoes":{
+            "get":{
+                "summary":"Pegar os inscritos no evento",
+                "description":"Pegar os inscritos no evento",
+                "tags": ["EventRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"id_evento",
+                    "in":"params",
+                    "description":"Id de evento",
+                    "required":true
+                }
+                ],
+                "responses":{
+                    "200":{
+                        "description":"Ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/inscricoes_user"
+                                    }
+                                },
+                                "example":{
+                                    "uuid_user":"string",
+                                    "nome":"nome exemplo",
+                                    "email":"exemplo@gmail.com",
+                                    "status_pagamento":"REALIZADO",
+                                    "credenciamento": true
+                                    
+                                    
+                                    
+                                }
+                            }
+                        }
+    
+                        },
+                    "400":{
+                        "description": "Evento não encontrado"
+                    }
+                }
+            }
+        },
+        "/admin/events/:event_id/inscricoes/credenciamento/:user_id":{
+            "put":{
+                "summary":"Atualizar informações do Credenciamento",
+                "description":"Atualizar informações do Credenciamento",
+                "tags": ["EventRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"user_id",
+                    "in":"params",
+                    "description":"Id do usuário",
+                    "required":true
+                },
+                {
+                    "name":"event_id",
+                    "in":"params",
+                    "description":"Id do evento",
+                    "required":true
+                }
+               
+            ],
+            "requestBody": {
+                "content":{
+                    "application/json": {
+                        "schema":{
+                            "$ref": "#/components/schemas/put_credenciamento"
+
+                        }
+                       
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description":"Valor Alterado com sucesso!"
+                    
+                    },
+                "400":{
+                    "description": "Informações invalidas!"
+                }
+            }
+
+
+
+            }
+        },
+        "/admin/events/:id_evento/atividades":{
+            "get":{
+                "summary":"Pegar todas as atividades do evento",
+                "description":"Pegar todas as atividades do evento",
+                "tags": ["EventRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"id_evento",
+                    "in":"params",
+                    "description":"Id do evento",
+                    "required":true
+                }
+                ],
+                "responses":{
+                    "200":{
+                        "description":"Ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/atividade_2"
+                                    }
+                                },
+                                "example":{
+                                    "atividade":{
+                                        "nome":"nome",
+                                    "_count":{
+                                        "userAtividade":12
+                                    },
+                                    "uuid_atividade":"string",
+                                    "max_participants":13,
+                                    "tipo_atividade":"MINICURSO"
+                                    }
+                                    
+                                    
+                                    
+                                }
+                            }
+                        }
+    
+                        },
+                    "400":{
+                        "description": "Evento não encontrado"
+                    }
+                }
+            }
+        },
+        "/admin/atividades/:id_atividade/inscricoes":{
+            "get":{
+                "summary":"Pegar inscritos em atividade",
+                "description":"Pegar inscritos em atividade",
+                "tags": ["ActivityRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"id_atividade",
+                    "in":"params",
+                    "description":"Id da atividade",
+                    "required":true
+                }
+                ],
+                "responses":{
+                    "200":{
+                        "description":"Ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/subscriber"
+                                    }
+                                },
+                                "example":{
+                                    "uuid_user": "string",
+                                    "presenca": "boolean",
+                                    "user": {
+                                        "nome": "string",
+                                        "nome_cracha": "string",
+                                        "email": "string"
+                                    }
+                                    
+                                    
+                                    
+                                }
+                            }
+                        }
+    
+                        },
+                    "400":{
+                        "description": "Atividade não encontrada"
+                    }
+                }
+
+            }
+        },
+
+        "/admin/atividades/:atividade_id":{
+            "get":{
+                "summary":"Pegar atividade por id",
+                "description":"Pegar atividade por id",
+                "tags": ["ActivityRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"atividade_id",
+                    "in":"params",
+                    "description":"Id da atividade",
+                    "required":true
+                }
+                ],
+                "responses":{
+                    "200":{
+                        "description":"Ok",
+                        "content":{
+                            "application/json":{
+                                "schema":{
+                                    "type":"array",
+                                    "items":{
+                                    "$ref": "#/components/schemas/getActivityById"
+                                    }
+                                },
+                                "example":{
+                                   "nome":"exemplo_nome_atividade"   
+                                }
+                            }
+                        }
+    
+                        },
+                    "400":{
+                        "description": "Informações inválidas!"
+                    }
+                }
+
+            }
+        },
+        "/admin/atividades/:atividade_id/inscricoes/:user_id/frequencia":{
+            "put":{
+                "summary":"Atualizar informações da presenca na atividade",
+                "description":"Atualizar informações da presenca na atividade",
+                "tags": ["ActivityRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"user_id",
+                    "in":"params",
+                    "description":"Id do usuário",
+                    "required":true
+                },
+                {
+                    "name":"atividade_id",
+                    "in":"params",
+                    "description":"Id da Atividade",
+                    "required":true
+                }
+               
+            ],
+            "requestBody": {
+                "content":{
+                    "application/json": {
+                        "schema":{
+                            "$ref": "#/components/schemas/atividade_put_presenca"
+
+                        }
+                       
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description":"Valor Alterado com sucesso!"
+                    
+                    },
+                "400":{
+                    "description": "Informações invalidas!"
+                }
+            }
+            }
+        },
+        "/admin/user/:user_id/atividades/troca":{
+            "put":{
+                "summary":"Atualizar atividade",
+                "description":"Atualizar atividade",
+                "tags": ["ActivityRoutes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters":[{
+                    "name":"user_id",
+                    "in":"params",
+                    "description":"Id do usuário",
+                    "required":true
+                }
+              
+               
+            ],
+            "requestBody": {
+                "content":{
+                    "application/json": {
+                        "schema":{
+                            "$ref": "#/components/schemas/atividade_put"
+
+                        }
+                       
+                    }
+                }
+            },
+            "responses":{
+                "200":{
+                    "description":"alterado com sucesso"
+                    
+                    },
+                "400":{
+                    "description": "Informações invalidas!"
+                }
+            }
+
+            }
+        }
+
+
+
+
+
+
+},
+   
+    
+
+    "components":{
+        "schemas":{
+            "Login":{
+                "type":"object",
+                "properties":{
+                    "email":{
+                        "type": "string"
+                    },
+                    "senha":{
+                        "type":"string"
+                    }
+                }
+                
+                
+            },
+            "atividade_put":{
+                "type":"object",
+                "properties":{
+                    "uuid_atividade_nova":{
+                        "type":"string"
+                    },
+                    "uuid_atividade_atual":{
+                        "type":"string"
+                    }
+                }
+            },
+            "atividade_put_presenca":{
+                "type":"object",
+                "properties":{
+                    "atividade_id":{
+                        "type":"string"
+                    },
+                    "user_id":{
+                        "type":"string"
+                    },
+                    "presenca":{
+                        "type":"boolean"
+                    }
+                }
+            },
+            "getActivityById":{
+                "type":"object",
+                "properties":{
+                    "nome":{
+                        "type":"string"
+                    }
+                }
+            },
+            "subscriber":{
+                "type":"object",
+                "properties":{
+                    "uuid_user":{
+                        "type":"string"
+                    },
+                    "presenca":{
+                        "type":"boolean"
+                    },
+                    "user":{
+                        "type":"array",
+                        "items":{
+                            "$ref":"#/components/schemas/user"
+                        }
+                    }
+                }
+            },
+            "user":{
+                "type":"object",
+                "properties":{
+                    "nome":{
+                        "type":"string"
+                    },
+                    "email":{
+                        "type":"string"
+                    },
+                    "nome_cracha":{
+                        "type":"string"
+                    }
+                }
+            },
+            "atividade_2":{
+                "type":"object",
+                "properties":{
+                    "nome":{
+                        "type":"string"
+                    },
+                    "_count":{
+                        "type":"object",
+                        "properties":{
+                            "userAtividade":{
+                                "type":"number"
+                            }
+                        }
+                    },
+                    "uuid_atividade":{
+                        "type":"string"
+                    },
+                    "max_participants":{
+                        "type":"number"
+                    },
+                    "tipo_atividade":{
+                        "type":"array",
+                        "items":{
+                            "$ref":"#/components/schemas/Tipo_Atividade"
+                        }
+                    }
+                
+                }
+            },
+            "put_credenciamento":{
+                "type":"object",
+                "properties":{
+                    "user_id":{
+                        "type":"string"
+                    },
+                    "uuid_lote":{
+                        "type":"string"
+                    },
+                    "credenciamento":{
+                        "type":"boolean"
+                    }
+                }
+            },
+            "inscricoes_user":{
+             "type":"object",
+             "properties":{
+                "uuid_user":{
+                    "type":"string"
+                },
+                "nome":{
+                    "type":"string"
+                },
+                "email":{
+                    "type":"string"
+                },
+                "status_pagamento":{
+                    "type":"array",
+                    "items":{
+                        "$ref": "#/components/schemas/StatusPagamentoEnum"
+                    }
+                },
+                "credenciamento":{
+                    "type":"boolean"
+                }
+             }
+            },
+            "evento_get":{
+                    "type":"object",
+                    "properties":{
+                        "nome":{
+                            "type":"string"
+                        },
+                        "uuid_evento":{
+                            "type":"string"
+                        }
+                    }
+            },
+            "getFinancialInformatio":{
+                "type":"object",
+                "properties":{
+                    "total_inscritos":{
+                        "type":"number"
+                    },
+                    "total_arrecadado":{
+                        "type":"number"
+                    },
+                    "inscricoes_pendentes":{
+                        "type":"number"
+                    }
+                }
+            },
+
+            "payment":{
+             "type":"object",
+             "properties":{
+                "qr_code_base64":{
+                    "type":"string"
+                },
+                "qr_code":{
+                    "type":"string"
+                },
+                "ticket_url":{
+                    "type":"string"
+                }
+             }
+            },
+            "updatedUser":{
+                "type":"object",
+                "properties":{
+                    "nome":{
+                        "type":"string"
+                    },
+                    "nome_cracha":{
+                        "type":"string"
+                    },
+                    "email":{
+                        "type":"string"
+                    },
+                    "instituicao":{
+                        "type":"string"
+                    },
+                    "status_pagamento":{
+                        "type": "array",
+                        "items":{
+                            "$ref": "#/components/schemas/StatusPagamentoEnum"
+                        }
+                    },
+                    "activities":{
+                        "type": "array",
+                        "items":{
+                            "$ref": "#/components/schemas/Tipo_Atividade"
+                        }
+                    }
+                    
+            }
+        },
+
+           
+            "RealizaPagamento":{
+                "type":"object",
+                "properties":{
+                    "transaction_amount":{
+                        "type":"number",
+                        "description": "Valor da transação."
+                    },
+                    "description":{
+                        "type":"string"
+                    },
+                    "payment_method_id":{
+                        "type":"string"
+                    },
+                    "date_of_expiration":{
+                        "type": "string",
+                        "format":"date-time"
+                    },
+                    "notification_url":{
+                        "type":"string",
+                        "format":"uri"
+                    },
+                    "payer":{
+                        "type":"object",
+                        "properties":{
+                            "email":{
+                                "type":"string"
+                            }
+                        }
+                    }
+                }
+            },
+
+            "req_body_updateParticipantInformations":{
+                "type":"object",
+                "properties":{
+                    "nome":{
+                        "type":"string"
+                    },
+                    "nome_cracha":{
+                        "type":"string"
+                    },
+                    "email":{
+                        "type":"string"
+                    },
+                    "instituicao":{
+                        "type":"string"
+                    },
+                    "status_pagamento":{
+                        "type": "array",
+                        "items":{
+                            "$ref": "#/components/schemas/StatusPagamentoEnum"
+                        }
+                    },
+                    "minicurso":{
+                        "type":"boolean"
+                    },
+                    "workshop":{
+                        "type":"boolean"
+                    },
+                    "oficina":{
+                        "type":"boolean"
+                    }
+                }
+            },
+            "ApiRespondeget":{
+                "type":"object",
+                "properties":{
+                    "uuid_lote":{
+                        "type": "string"
+                    },
+                    "uuid_evento":{
+                        "type":"string"
+                    },
+                    "preco":{
+                        "type": "number"
+                    },
+                    "nome":{
+                        "type": "string"
+                    },
+                    "descricao":{
+                        "type":"string"
+                    },
+                    "ativo":{
+                        "type":"boolean"
+                    }
+                }
+            },
+            "AtividadesParams":{
+                "type":"object",
+                "properties":{
+                    "palestra_id":{
+                        "type":"string"
+                    },
+                    "oficina_id":{
+                        "type":"string"
+                    },
+                    "minicurso_id":{
+                        "type":"string"
+                    },
+                    "workshop_id":{
+                        "type":"string"
+                    }
+                }
+            },
+            "StatusPagamentoEnum":{
+                "type": "string",
+                      "enum": [
+                        "REALIZADO",
+                        "PENDENTE",
+                        "EXPIRADO"
+                      ]
+                      
+            
+            },
+            "RegistroResponse":{
+                "type":"object",
+                "properties":{
+                    "nome":{
+                        "type":"string"
+                    },
+                    "email":{
+                        "type": "string"
+                    },
+                    "nome_cracha":{
+                        "type":"string"
+                    },
+                    "instituicao":{
+                        "type": "string"
+                    },
+                    "atividades":{
+                        "type": "array",
+                        "items":{
+                            "$ref": "#/components/schemas/AtividadesParams"
+                        }
+                    },
+                    "lote_id":{
+                        "type":"string"
+                    }
+                   
+                }
+            
+       
+    },
+
+
+    "user_inscricao":{
+       "type":"object",
+       "properties":{
+        "uuid_user":{
+            "type":"string"
+        },
+        "uuid_lote":{
+            "type":"string"
+        },
+        "credenciamento":{
+            "type":"boolean"
+        },
+        "id_payment_mercado_pago":{
+            "type":"string"
+        },
+        "expiration_datetime":{
+            "type":"Date"
+        },
+        "status_pagamento":{
+            "type": "array",
+            "items":{
+                "$ref": "#/components/schemas/StatusPagamentoEnum"
+            }
+        }
+       }
+    },
+    "personal_user_information":{
+        "type":"object",
+        "properties":{
+            "uuid":{
+                "type":"string"
+            },
+            "nome":{
+                "type":"string"
+            },
+            "nome_cracha":{
+                "type":"string"
+            },
+            "email":{
+                "type":"string"
+            },
+            "instituicao":{
+                "type":"string"
+            }
+
+     }
+    },
+    "getUserInEvent":{
+       "type":"object",
+       "properties":{
+        "personal_user_information":{
+            "type":"array",
+            "items":{
+                "$ref": "#/components/schemas/personal_user_information"
+            }
+        },
+        "atividades":{
+            "type":"array",
+            "items":{
+                "$ref": "#/components/schemas/atividades"
+            }
+        },
+        "status_pagamento":{
+            "type":"array",
+            "items":{
+                "$ref": "#/components/schemas/StatusPagamentoEnum"
+            }
+        },
+        "credenciamento":{
+            "type":"boolean"
+        }
+
+       }
+    },
+    "Tipo_Atividade":{
+        "type": "string",
+              "enum": [
+                "MINICURSO",
+                "WORKSHOP",
+                "OFICINA",
+                "PALESTRA"
+              ]
+             
+    
+    },
+    "inscricao":{
+        "type":"object",
+        "properties":{
+            "status":{
+                "type": "array",
+                "items":{
+                    "$ref": "#/components/schemas/StatusPagamentoEnum"
+                }
+            },
+            "nome_lote":{
+                "type":"string"
+            },
+            "preco":{
+                "type":"number"
+            }
+
+
+        }
+    },
+    "atividades_get":{
+        "type":"object",
+        "properties":{
+            "nome":{
+                "type":"string"
+            },
+            "tipo":{
+                "type": "array",
+                "items":{
+                    "$ref": "#/components/schemas/Tipo_Atividade"
+                }
+            }
+          
+        }
+    },
+    "atividades":{
+        "type":"object",
+        "properties":{
+            "presenca":{
+                "type":"boolean"
+            },
+            "nome":{
+                "type":"string"
+            },
+            "uuid_atividade":{
+                "type":"string"
+            },
+            "tipo_atividade":{
+                "type":"array",
+                "items":{
+                    "$ref": "#/components/schemas/Tipo_Atividade"
+                }
+            }
+        }
+    },
+
+    "Respostaget":{
+        "type":"object",
+        "properties":{
+            "user_name":{
+                "type":"string"
+            },
+            "inscricao":{
+                "type": "array",
+                "items":{
+                    "$ref": "#/components/schemas/inscricao"
+                }
+            },
+            "atividades":{
+                "type": "array",
+                "items":{
+                    "$ref": "#/components/schemas/atividades_get"
+                }
+            }
+          
+
+        }
+    }
+            
+},
+    "securitySchemes": {
+        "bearerAuth":{
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+
+    }
+}}

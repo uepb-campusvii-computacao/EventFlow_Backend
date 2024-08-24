@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `tb_atividade` ADD COLUMN `tipo_atividade` ENUM('MINICURSO', 'WORKSHOP', 'OFICINA', 'PALESTRA') NOT NULL DEFAULT 'MINICURSO';

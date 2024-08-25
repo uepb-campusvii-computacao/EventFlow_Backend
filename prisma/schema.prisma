@@ -35,6 +35,7 @@ model Evento {
   uuid_evento     String      @id @default(uuid())
   uuid_user_owner String
   nome            String
+  banner_img_url  String?
   usuario         Usuario     @relation(fields: [uuid_user_owner], references: [uuid_user])
   lote            Lote[]
   atividade       Atividade[]

@@ -1,3 +1,4 @@
+import slugify from "slugify";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
 import { createPaymentUserResgistration } from "../services/payments/createPaymentUserRegistration";
@@ -94,7 +95,12 @@ export default class EventRepository {
   static async findAllEvents() {
     const response = await prisma.evento.findMany();
 
-    return response;
+    return response.map(item => (
+      {
+        ...item,
+        slug: slugify(item.nome, { lower: true, strict: true })
+      }
+    ))
   }
 
   static async countUsuariosCredenciadosByEvento(idEvento: string) {

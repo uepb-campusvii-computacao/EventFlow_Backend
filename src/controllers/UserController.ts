@@ -123,6 +123,7 @@ export default class UserController {
 
       const response = {
         user_name: user.nome,
+        email: user.email,
         inscricao: {
           status: user_inscricao?.status_pagamento,
           nome_lote: lote.nome,

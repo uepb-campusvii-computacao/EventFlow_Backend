@@ -32,6 +32,7 @@ routes.get("/events/:event_id/produtos", EventController.getAllProductsInEvent);
 
 // Rotas Públicas
 routes.post("/login",UserController.loginUser);
+routes.get("/events", EventController.getAllEvents);
 routes.get("/events/:event_id/lotes", EventController.getLotesInEvent);
 routes.post("/register/:event_id", EventController.registerParticipanteInEvent);
 routes.post("/events/:event_id/inscricoes/find", UserController.getLoteIdAndUserId);

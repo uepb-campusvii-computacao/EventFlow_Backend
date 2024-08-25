@@ -15,6 +15,7 @@ import {
 } from "../services/payments/getPayment";
 import { checkPassword } from "../services/user/checkPassword";
 import { deleteUserByUserId } from "../services/user/deleteUserByUserId";
+import { encryptPassword } from "../services/user/encryptPassword";
 
 export default class UserController {
   static async loginUser(req: Request, res: Response) {
@@ -49,6 +50,14 @@ export default class UserController {
     return res
       .status(200)
       .json({ token: token, user_id: userExists.uuid_user });
+  }
+
+  static async gerarSenha(req: Request, res: Response){
+    const params = req.body;
+
+    const senha = await encryptPassword(params.senha);
+
+    return res.json({senha: senha});
   }
 
   static async getLoteIdAndUserId(req: Request, res: Response) {

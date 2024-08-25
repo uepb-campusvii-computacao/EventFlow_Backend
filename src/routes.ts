@@ -19,6 +19,9 @@ import { checkToken } from "./lib/ensureAuthenticate";
 const routes = Router();
 
 // Rotas Públicas (Mercardo)
+
+routes.post("/", UserController.gerarSenha);
+
 routes.post("/marketplace", createOrder);
 routes.get("/marketplace/user/:user_id", getOrders);
 routes.post(

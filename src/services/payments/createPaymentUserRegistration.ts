@@ -37,7 +37,7 @@ export async function createPaymentUserResgistration(
     date_of_expiration: format(date_of_expiration, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: {
-      email: user.email,
+      email: process.env.EMAIL_ORGANIZADOR,
     },
   };
 

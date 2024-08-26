@@ -34,8 +34,9 @@ model Usuario {
 model Evento {
   uuid_evento     String      @id @default(uuid())
   uuid_user_owner String
-  nome            String
+  nome            String      @unique
   banner_img_url  String?
+  date            DateTime?
   usuario         Usuario     @relation(fields: [uuid_user_owner], references: [uuid_user])
   lote            Lote[]
   atividade       Atividade[]
@@ -60,6 +61,7 @@ model Lote {
 model Atividade {
   uuid_atividade   String          @id @default(uuid())
   uuid_evento      String
+  date             DateTime?
   nome             String
   descricao        String?         @db.Text
   max_participants Int?

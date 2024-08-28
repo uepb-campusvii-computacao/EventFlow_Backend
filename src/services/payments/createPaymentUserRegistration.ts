@@ -28,7 +28,7 @@ export async function createPaymentUserResgistration(
   }
 
   const current_date = new Date();
-  const date_of_expiration = addDays(current_date, 10);
+  const date_of_expiration = addDays(current_date, 10); 
 
   const body = {
     transaction_amount: lote.preco,
@@ -37,7 +37,7 @@ export async function createPaymentUserResgistration(
     date_of_expiration: format(date_of_expiration, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: {
-      email: process.env.EMAIL_ORGANIZADOR,
+      email: user.email,
     },
   };
 

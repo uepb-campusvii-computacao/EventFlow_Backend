@@ -148,6 +148,7 @@ export default class UserController {
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
 
+        console.log(user_inscricao)
       const payment = await getPayment(user_inscricao!.id_payment_mercado_pago);
 
       return res.status(200).json(payment);

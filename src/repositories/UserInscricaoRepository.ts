@@ -33,21 +33,26 @@ export default class UserInscricaoRepository {
   }
 
   static async findLoteIdAndUserIdByEmail(event_id: string, email: string) {
-    const user = await prisma.usuario.findUniqueOrThrow({
+    const user = await prisma.userInscricao.findFirst({
       where: {
-        email,
+        lote: {
+          uuid_evento: event_id
+        },
+        AND: {
+          usuario: {
+            email
+          }
+        }
       },
-    });
-
-    const lote = await prisma.lote.findFirstOrThrow({
-      where: {
-        uuid_evento: event_id,
-      },
+      select: {
+        uuid_lote: true,
+        uuid_user: true,
+      }
     });
 
     return {
       uuid_user: user?.uuid_user,
-      uuid_lote: lote?.uuid_lote,
+      uuid_lote: user?.uuid_lote,
     };
   }
 

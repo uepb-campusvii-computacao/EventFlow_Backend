@@ -61,24 +61,15 @@ export default class UserInscricaoRepository {
     uuid_evento: string
   ) {
     //Só pode existir 1 inscrição por evento, independetemente da quantidade de lotes!
-    const lote = await prisma.lote.findFirst({
-      where: {
-        uuid_evento,
-      },
-    });
 
-    if (!lote) {
-      throw new Error(
-        `Nenhum lote encontrado para o evento com ID ${uuid_evento}.`
-      );
-    }
-
-    const user_inscricao = await prisma.userInscricao.findUnique({
+    const user_inscricao = await prisma.userInscricao.findFirstOrThrow({
       where: {
-        uuid_lote_uuid_user: {
-          uuid_lote: lote.uuid_lote,
-          uuid_user,
+        lote: {
+          uuid_evento,
         },
+        AND: {
+          uuid_user
+        }
       },
     });
 

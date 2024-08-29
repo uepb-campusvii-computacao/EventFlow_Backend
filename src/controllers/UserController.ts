@@ -52,12 +52,12 @@ export default class UserController {
       .json({ token: token, user_id: userExists.uuid_user });
   }
 
-  static async gerarSenha(req: Request, res: Response){
+  static async gerarSenha(req: Request, res: Response) {
     const params = req.body;
 
     const senha = await encryptPassword(params.senha);
 
-    return res.json({senha: senha});
+    return res.json({ senha: senha });
   }
 
   static async getLoteIdAndUserId(req: Request, res: Response) {
@@ -148,7 +148,7 @@ export default class UserController {
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
 
-        console.log(user_inscricao)
+      console.log(user_inscricao);
       const payment = await getPayment(user_inscricao!.id_payment_mercado_pago);
 
       return res.status(200).json(payment);

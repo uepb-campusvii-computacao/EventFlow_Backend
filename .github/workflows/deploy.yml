@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main  # Altere para o branch que você deseja monitorar
+      - master  # Altere para o branch que você deseja monitorar
 
 jobs:
   deploy:

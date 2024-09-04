@@ -44,8 +44,12 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
+          node -v
+          npm -v
           cd /EventFlow_Backend
-          git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
+          git pull origin master
           git status
           npm install 
+          npx prisma migrate deploy
+          npm run build
           pm2 restart api

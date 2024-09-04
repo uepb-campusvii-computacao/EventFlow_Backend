@@ -51,6 +51,9 @@ jobs:
           ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
           GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
           EOT
+
+          git remote set-url origin ${{ secrets.REPOSITORY_URL }}
+
           
           git pull origin master
           git status

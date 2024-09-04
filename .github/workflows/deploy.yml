@@ -37,7 +37,10 @@ jobs:
         port: 22
         script: |
           cd EventFlow_Backend
-          echo "Node.js not found. Installing Node.js..."
+          echo "Node.js version:"
+          node -v
+          echo "npm version:"
+          npm -v
           git pull origin master
           git status
           npm ci

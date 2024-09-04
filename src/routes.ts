@@ -20,6 +20,9 @@ const routes = Router();
 
 // Rotas Públicas (Mercardo)
 
+routes.get("/", (req, res) => {
+  return res.status(200).send("OK");
+})
 routes.post("/", UserController.gerarSenha);
 
 routes.post("/marketplace", createOrder);

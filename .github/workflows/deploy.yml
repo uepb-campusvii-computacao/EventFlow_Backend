@@ -1,49 +1,32 @@
-name: Node.js CD
+name: Deploy to VPS
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - main  # Altere para o branch que você deseja monitorar
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install Node.js
-      uses: actions/setup-node@v3
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.10.1
       with:
-        node-version: '21'
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Cache npm dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Deploy using ssh
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd EventFlow_Backend
-          echo "Node.js version:"
-          node -v
-          echo "npm version:"
-          npm -v
-          git pull origin master
-          git status
-          npm ci
-          npx prisma migrate deploy
-          npm run build
-          pm2 restart api
+    - name: Deploy application via SSH
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+        cd EventFlow_Backend
+        git pull origin master
+        # Comandos para instalar dependências e rodar seu app
+        # Por exemplo, para um app Node.js:
+        npm install
+        npx prisma migrate deploy
+        npm run build
+        pm2 restart api  # ou qualquer comando para reiniciar seu app
+        EOF

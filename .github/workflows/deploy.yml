@@ -56,9 +56,11 @@ jobs:
           EOT
 
           git remote set-url origin ${{ secrets.REPOSITORY_URL }}
-
+          git fetch origin
+          git checkout master
           git pull origin master
           git status
+
           npm install 
           npx prisma migrate deploy
           npm run build

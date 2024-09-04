@@ -13,15 +13,6 @@ jobs:
     - name: "Baixar o código"
       uses: actions/checkout@v4
 
-    - name: "Copiar os arquivos para a VPS"
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "."
-        target: "/EventFlow_Backend"
-
     - name: "Build da aplicação"
       uses: appleboy/ssh-action@v1.0.3
       with: 
@@ -39,6 +30,7 @@ jobs:
               [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
               nvm install 20            
           fi
+          git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
 
           cd /EventFlow_Backend
 

@@ -5,7 +5,7 @@ name: Node.js CD
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ EV-11-Gerenciador-criar-ambiente-de-dev ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -34,7 +34,7 @@ jobs:
         port: 22
         script: |
           cd ~/home/danielwetan/apps/node1
-          git pull origin master
+          git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
           git status
           npm install --only=prod
           pm2 restart api

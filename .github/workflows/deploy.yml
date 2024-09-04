@@ -1,32 +1,60 @@
-name: Deploy to VPS
+name: Node.js CD
 
+# Controls when the action will run.
 on:
   push:
-    branches:
-      - master  # Altere para o branch que você deseja monitorar
+    branches: [ master ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_URL: ${{ secrets.GITHUB_TOKEN }}
+      API_URL: ${{ secrets.API_URL }}
+      SECRET: ${{ secrets.SECRET }}
+      ACCESS_TOKEN_MERCADOPAGO: ${{ secrets.ACCESS_TOKEN_MERCADOPAGO }}
+      GERENCIADOR_URL: ${{ secrets.GERENCIADOR_URL }}
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v2
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.10.1
+    - name: Use Node.js 20
+      uses: actions/setup-node@v3
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        node-version: 20.x
 
-    - name: Deploy application via SSH
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-        cd EventFlow_Backend
-        git pull origin master
-        # Comandos para instalar dependências e rodar seu app
-        # Por exemplo, para um app Node.js:
-        npm install
-        npx prisma migrate deploy
-        npm run build
-        pm2 restart api  # ou qualquer comando para reiniciar seu app
-        EOF
+    - run: npm i
+
+    - run: npx prisma migrate deploy
+
+    - run: npm run build --if-present
+
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+          nvm use 20
+          cd /EventFlow_Backend
+          
+          # Criar arquivo .env no servidor
+          cat <<EOT > .env
+          DATABASE_URL=${{ env.DATABASE_URL }}
+          API_URL=${{ env.API_URL }}
+          SECRET=${{ env.SECRET }}
+          ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
+          GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
+          EOT
+          
+          git pull origin master
+          git status
+          npm install 
+          npx prisma migrate deploy
+          npm run build
+          pm2 restart api

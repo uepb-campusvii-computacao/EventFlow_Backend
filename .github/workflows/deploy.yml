@@ -1,43 +1,40 @@
-name: Deploy to VPS
 
+name: Node.js CD
+
+# Controls when the action will run. 
 on:
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches:
-      - EV-11-Gerenciador-criar-ambiente-de-dev  # Altere para o branch que você deseja monitorar
+    branches: [ master ]
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  deploy:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - name: "Baixar o código"
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v2
+    - name: Use Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+    - run: npm i
+    - run: npx prisma migrate deploy
+    - run: npm run build --if-present
 
-    - name: "Build da aplicação"
-      uses: appleboy/ssh-action@v1.0.3
-      with: 
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          # Instala Node.js se não estiver instalado
-          if ! command -v node &> /dev/null
-          then
-              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-              [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-              nvm install 20            
-          fi
-          git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
-
-          cd /EventFlow_Backend
-
-          npm install
-
-          npx prisma migrate deploy
-
-          npm run build
-
+          cd ~/home/danielwetan/apps/node1
+          git pull origin master
+          git status
+          npm install --only=prod
           pm2 restart api

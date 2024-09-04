@@ -5,7 +5,6 @@ on:
   push:
     branches: 
       - EV-11-Gerenciador-criar-ambiente-de-dev
-      - master
 
 jobs:
   build:
@@ -28,42 +27,29 @@ jobs:
 
     - run: npm i
 
+    - name: Set up environment variables
+      run: |
+        cat <<EOT > .env
+        DATABASE_URL=${{ env.DATABASE_URL }}
+        API_URL=${{ env.API_URL }}
+        SECRET=${{ env.SECRET }}
+        ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
+        GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
+        EOT
+
     - run: npx prisma migrate deploy
 
     - run: npm run build --if-present
 
-    - name: Deploy using ssh
-      uses: appleboy/ssh-action@master
+    - name: Deploy to Server
+      uses: easingthemes/ssh-deploy@main
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          # Adiciona a chave do host SSH ao known_hosts
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
-          
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-          nvm use 20
-          cd /EventFlow_Backend
-          
-          # Criar arquivo .env no servidor
-          cat <<EOT > .env
-          DATABASE_URL=${{ env.DATABASE_URL }}
-          API_URL=${{ env.API_URL }}
-          SECRET=${{ env.SECRET }}
-          ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
-          GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
-          EOT
-
-          git remote set-url origin ${{ secrets.REPOSITORY_URL }}
-          git fetch origin
-          git checkout master
-          git pull origin master
-          git status
-
-          npm install 
-          npx prisma migrate deploy
-          npm run build
-          pm2 restart api  
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rltgoDzvO --delete -vv"
+          SOURCE: "."
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: "/EventFlow_Backend"
+          SCRIPT_AFTER: |
+            echo "dentro do vps"
+            pm2 restart api  

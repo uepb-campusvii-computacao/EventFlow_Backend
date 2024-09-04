@@ -1,9 +1,8 @@
-
 name: Node.js CD
 
 # Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on push or pull request events but only for the specific branch
   push:
     branches: [ EV-11-Gerenciador-criar-ambiente-de-dev ]
 
@@ -14,15 +13,27 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    # Environment variables that will be available for all steps in the job
+    env:
+      DATABASE_URL: "mysql://u537153331_admin:eventflowAdmin2024@srv1603.hstgr.io:3306/u537153331_eventflow"
+      API_URL: "https://api.eventflow.com.br"
+      SECRET: "jpsjdfiaen0a9weet-q0v9je49t9qwegnwaewtq2nvasjjvnccsaxxxe"
+      ACCESS_TOKEN_MERCADOPAGO: "APP_USR-3623357814451153-042315-469046950538e5b9b474f8efb927611d-1781626255"
+      GERENCIADOR_URL: "https://gerenciador.eventflow.com.br"
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - uses: actions/checkout@v2
+
     - name: Use Node.js 20
       uses: actions/setup-node@v3
       with:
         node-version: 20.x
+
     - run: npm i
+
     - run: npx prisma migrate deploy
+
     - run: npm run build --if-present
 
     - name: Deploy using ssh
@@ -33,6 +44,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
+          export NODE_ENV=production
           cd ~/home/danielwetan/apps/node1
           git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
           git status

@@ -1,19 +1,14 @@
 name: Node.js CD
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the specific branch
   push:
     branches: [ EV-11-Gerenciador-criar-ambiente-de-dev ]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Environment variables that will be available for all steps in the job
     env:
       DATABASE_URL: "mysql://u537153331_admin:eventflowAdmin2024@srv1603.hstgr.io:3306/u537153331_eventflow"
       API_URL: "https://api.eventflow.com.br"
@@ -21,7 +16,6 @@ jobs:
       ACCESS_TOKEN_MERCADOPAGO: "APP_USR-3623357814451153-042315-469046950538e5b9b474f8efb927611d-1781626255"
       GERENCIADOR_URL: "https://gerenciador.eventflow.com.br"
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - uses: actions/checkout@v2
 
@@ -47,9 +41,17 @@ jobs:
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
           nvm use 20
-          node -v
-          npm -v
           cd /EventFlow_Backend
+          
+          # Criar arquivo .env no servidor
+          cat <<EOT > .env
+          DATABASE_URL=${{ env.DATABASE_URL }}
+          API_URL=${{ env.API_URL }}
+          SECRET=${{ env.SECRET }}
+          ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
+          GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
+          EOT
+          
           git pull origin master
           git status
           npm install 

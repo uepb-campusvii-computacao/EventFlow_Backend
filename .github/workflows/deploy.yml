@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.GITHUB_TOKEN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       API_URL: ${{ secrets.API_URL }}
       SECRET: ${{ secrets.SECRET }}
       ACCESS_TOKEN_MERCADOPAGO: ${{ secrets.ACCESS_TOKEN_MERCADOPAGO }}

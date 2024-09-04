@@ -45,8 +45,8 @@ jobs:
         port: 22
         script: |
           export NODE_ENV=production
-          cd ~/home/danielwetan/apps/node1
+          cd /EventFlow_Backend
           git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
           git status
-          npm install --only=prod
+          npm install 
           pm2 restart api

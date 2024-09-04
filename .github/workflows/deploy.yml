@@ -37,7 +37,7 @@ jobs:
         port: 22
         script: |
           cd EventFlow_Backend
-          git pull origin main
+          git pull origin master
           git status
           npm ci
           npx prisma migrate deploy

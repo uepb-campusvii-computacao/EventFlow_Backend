@@ -3,18 +3,18 @@ name: Node.js CD
 # Controls when the action will run.
 on:
   push:
-    branches: [ EV-11-Gerenciador-criar-ambiente-de-dev ]
+    branches: [ master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: "mysql://u537153331_admin:eventflowAdmin2024@srv1603.hstgr.io:3306/u537153331_eventflow"
-      API_URL: "https://api.eventflow.com.br"
-      SECRET: "jpsjdfiaen0a9weet-q0v9je49t9qwegnwaewtq2nvasjjvnccsaxxxe"
-      ACCESS_TOKEN_MERCADOPAGO: "APP_USR-3623357814451153-042315-469046950538e5b9b474f8efb927611d-1781626255"
-      GERENCIADOR_URL: "https://gerenciador.eventflow.com.br"
+      DATABASE_URL: ${{ secrets.GITHUB_TOKEN }}
+      API_URL: ${{ secrets.API_URL }}
+      SECRET: ${{ secrets.SECRET }}
+      ACCESS_TOKEN_MERCADOPAGO: ${{ secrets.ACCESS_TOKEN_MERCADOPAGO }}
+      GERENCIADOR_URL: ${{ secrets.GERENCIADOR_URL }}
 
     steps:
     - uses: actions/checkout@v2

@@ -3,7 +3,7 @@ name: Node.js CD
 # Controls when the action will run.
 on:
   push:
-    branches: [ master ]
+    branches: [ EV-11-Gerenciador-criar-ambiente-de-dev ]
 
 jobs:
   build:
@@ -38,6 +38,9 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
+          # Adiciona a chave do host SSH ao known_hosts
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
           nvm use 20
@@ -54,10 +57,9 @@ jobs:
 
           git remote set-url origin ${{ secrets.REPOSITORY_URL }}
 
-          
           git pull origin master
           git status
           npm install 
           npx prisma migrate deploy
           npm run build
-          pm2 restart api
+          pm2 restart api  

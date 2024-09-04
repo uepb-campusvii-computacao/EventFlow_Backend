@@ -44,7 +44,6 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          cat text
           cd /EventFlow_Backend
           git pull origin EV-11-Gerenciador-criar-ambiente-de-dev
           git status

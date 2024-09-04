@@ -3,7 +3,7 @@ name: Node.js CD
 # Controls when the action will run.
 on:
   push:
-    branches: [ master ]
+    branches: [ EV-11-Gerenciador-criar-ambiente-de-dev ]
 
 jobs:
   build:
@@ -51,6 +51,9 @@ jobs:
           ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
           GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
           EOT
+
+          git remote set-url origin git@github.com:uepb-campusvii-computacao/EventFlow_Backend.git
+
           
           git pull origin master
           git status

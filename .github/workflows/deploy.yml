@@ -30,8 +30,19 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
+          # Instala Node.js se não estiver instalado
+          if ! command -v node &> /dev/null
+          then
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+              nvm install 20            
+          fi
+
           cd /EventFlow_Backend
+
           npm install
-          npx prisma deploy
+
+          npx prisma migrate deploy
+
           npm run build
+
           pm2 restart api

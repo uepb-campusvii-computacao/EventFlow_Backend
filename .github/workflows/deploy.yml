@@ -3,7 +3,7 @@ name: Node.js CD
 # Controls when the action will run.
 on:
   push:
-    branches: 
+    branches:
       - master
       - EV-11-Gerenciador-criar-ambiente-de-dev
 
@@ -12,15 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      API_URL: ${{ secrets.API_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+      API_URL: ${{ secrets.API_URL_PROD }}
       SECRET: ${{ secrets.SECRET }}
-      ACCESS_TOKEN_MERCADOPAGO: ${{ secrets.ACCESS_TOKEN_MERCADOPAGO }}
-      GERENCIADOR_URL: ${{ secrets.GERENCIADOR_URL }}
-      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+      ACCESS_TOKEN_MERCADOPAGO: ${{ secrets.ACCESS_TOKEN_MERCADOPAGO_PROD }}
+      GERENCIADOR_URL: ${{ secrets.GERENCIADOR_URL_PROD }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL_PROD }}
+      TARGET: ${{ secrets.TARGET_PROD }}
 
     steps:
     - uses: actions/checkout@v2
+
+    # Set environment variables based on the branch
+    - name: Set secrets for the environment
+      if: github.ref == 'refs/heads/EV-11-Gerenciador-criar-ambiente-de-dev'
+      run: |
+        echo "Using development secrets"
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL_DEV }}" >> $GITHUB_ENV
+        echo "API_URL=${{ secrets.API_URL_DEV }}" >> $GITHUB_ENV
+        echo "SECRET=${{ secrets.SECRET }}" >> $GITHUB_ENV
+        echo "ACCESS_TOKEN_MERCADOPAGO=${{ secrets.ACCESS_TOKEN_MERCADOPAGO_DEV }}" >> $GITHUB_ENV
+        echo "GERENCIADOR_URL=${{ secrets.GERENCIADOR_URL_DEV }}" >> $GITHUB_ENV
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_ENV
+        echo "TARGET=${{ secrets.TARGET_DEV }}" >> $GITHUB_ENV
 
     - name: Use Node.js 20
       uses: actions/setup-node@v3
@@ -37,7 +51,7 @@ jobs:
         SECRET=${{ env.SECRET }}
         ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
         GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
-        FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+        FRONTEND_URL=${{ env.FRONTEND_URL }}
         EOT
 
     - run: npx prisma generate
@@ -52,7 +66,7 @@ jobs:
           SOURCE: "."
           REMOTE_HOST: ${{ secrets.HOST }}
           REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: "/root/EventFlow_Backend"
+          TARGET: ${{ env.TARGET }}
           SCRIPT_AFTER: |
             echo "dentro do vps"
             pwd
@@ -60,4 +74,4 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm use 20
             npx prisma migrate deploy
-            pm2 restart api  
+            pm2 restart all

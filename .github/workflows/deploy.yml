@@ -54,6 +54,7 @@ jobs:
         ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
         GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
         FRONTEND_URL=${{ env.FRONTEND_URL }}
+        PORT=${{ env.PORT }}
         EOT
 
     - run: npx prisma generate

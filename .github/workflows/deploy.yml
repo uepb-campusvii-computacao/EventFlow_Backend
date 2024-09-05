@@ -53,10 +53,8 @@ jobs:
           SCRIPT_AFTER: |
             echo "dentro do vps"
             pwd
-            git pull origin master
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm use 20
-            npm install
-            npx prisma migrate deploy
+            npx prisma generate
             pm2 restart api  

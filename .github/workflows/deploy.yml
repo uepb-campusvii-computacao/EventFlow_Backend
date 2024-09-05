@@ -1,31 +1,80 @@
 name: Node.js CD
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ main ]
+    branches:
+      - master
+      - dev
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will 
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    - name: Deploy using ssh
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd api-eventflow
-          git pull origin main
-          git status
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+      API_URL: ${{ secrets.API_URL_PROD }}
+      SECRET: ${{ secrets.SECRET }}
+      ACCESS_TOKEN_MERCADOPAGO: ${{ secrets.ACCESS_TOKEN_MERCADOPAGO_PROD }}
+      GERENCIADOR_URL: ${{ secrets.GERENCIADOR_URL_PROD }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL_PROD }}
+      TARGET: ${{ secrets.TARGET_PROD }}
+      PORT: ${{ secrets.PORT_PROD }}
 
-          npm install --only=prod
-          pm2 restart api
+    steps:
+    - uses: actions/checkout@v2
+
+    # Set environment variables based on the branch
+    - name: Set secrets for the environment
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        echo "Using development secrets"
+        echo "DATABASE_URL=${{ secrets.DATABASE_URL_DEV }}" >> $GITHUB_ENV
+        echo "API_URL=${{ secrets.API_URL_DEV }}" >> $GITHUB_ENV
+        echo "SECRET=${{ secrets.SECRET }}" >> $GITHUB_ENV
+        echo "ACCESS_TOKEN_MERCADOPAGO=${{ secrets.ACCESS_TOKEN_MERCADOPAGO_DEV }}" >> $GITHUB_ENV
+        echo "GERENCIADOR_URL=${{ secrets.GERENCIADOR_URL_DEV }}" >> $GITHUB_ENV
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_ENV
+        echo "TARGET=${{ secrets.TARGET_DEV }}" >> $GITHUB_ENV
+        echo "PORT=${{ secrets.PORT_DEV }}" >> $GITHUB_ENV
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - run: npm i
+
+    - name: Set up environment variables
+      run: |
+        cat <<EOT > .env
+        DATABASE_URL=${{ env.DATABASE_URL }}
+        API_URL=${{ env.API_URL }}
+        SECRET=${{ env.SECRET }}
+        ACCESS_TOKEN_MERCADOPAGO=${{ env.ACCESS_TOKEN_MERCADOPAGO }}
+        GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
+        FRONTEND_URL=${{ env.FRONTEND_URL }}
+        PORT=${{ env.PORT }}
+        EOT
+
+    - run: npx prisma generate
+
+    - run: npm run build --if-present
+
+    - name: Deploy to Server
+      uses: easingthemes/ssh-deploy@main
+      with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rltgoDzvO --delete --quiet"
+          SOURCE: "."
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ env.TARGET }}
+          SCRIPT_AFTER: |
+            echo "dentro do vps"
+            pwd
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            nvm use 20
+            npx prisma migrate deploy
+            pm2 restart all

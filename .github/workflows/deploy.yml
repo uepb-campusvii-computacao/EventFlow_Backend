@@ -19,6 +19,7 @@ jobs:
       GERENCIADOR_URL: ${{ secrets.GERENCIADOR_URL_PROD }}
       FRONTEND_URL: ${{ secrets.FRONTEND_URL_PROD }}
       TARGET: ${{ secrets.TARGET_PROD }}
+      PORT: ${{ secrets.PORT_PROD }}
 
     steps:
     - uses: actions/checkout@v2
@@ -35,6 +36,7 @@ jobs:
         echo "GERENCIADOR_URL=${{ secrets.GERENCIADOR_URL_DEV }}" >> $GITHUB_ENV
         echo "FRONTEND_URL=${{ secrets.FRONTEND_URL_DEV }}" >> $GITHUB_ENV
         echo "TARGET=${{ secrets.TARGET_DEV }}" >> $GITHUB_ENV
+        echo "PORT=${{ secrets.PORT_DEV }}" >> $GITHUB_ENV
 
     - name: Use Node.js 20
       uses: actions/setup-node@v3

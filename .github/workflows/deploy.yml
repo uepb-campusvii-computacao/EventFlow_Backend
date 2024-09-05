@@ -49,7 +49,7 @@ jobs:
           SOURCE: "."
           REMOTE_HOST: ${{ secrets.HOST }}
           REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: "/EventFlow_Backend"
+          TARGET: "/root/EventFlow_Backend"
           SCRIPT_AFTER: |
             echo "dentro do vps"
             pwd

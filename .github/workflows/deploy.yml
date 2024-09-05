@@ -37,7 +37,7 @@ jobs:
         GERENCIADOR_URL=${{ env.GERENCIADOR_URL }}
         EOT
 
-    - run: npx prisma migrate deploy
+    - run: npx prisma generate
 
     - run: npm run build --if-present
 
@@ -56,5 +56,5 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             nvm use 20
-            npx prisma generate
+            npx prisma migrate deploy
             pm2 restart api  

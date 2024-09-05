@@ -70,6 +70,8 @@ export default class EventController {
         oficina,
       } = req.body;
 
+      console.log(req.body)
+
       const activities: { id: string; type: TipoAtividade }[] = [];
 
       if (minicurso) {

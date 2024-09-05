@@ -124,14 +124,18 @@ export default class UserController {
       const response = {
         user_name: user.nome,
         email: user.email,
+        nome_cracha: user.nome_cracha,
+        instituicao: user.instituicao,
         inscricao: {
           status: user_inscricao?.status_pagamento,
           nome_lote: lote.nome,
           preco: lote.preco,
+          uuid_evento: lote.uuid_evento
         },
         atividades: atividades.map((atividade) => ({
           nome: atividade.nome,
-          tipo: atividade.tipo_atividade,
+          tipo_atividade: atividade.tipo_atividade,
+          uuid_atividade: atividade.uuid_atividade
         })),
       };
 

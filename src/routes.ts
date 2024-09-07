@@ -41,12 +41,17 @@ routes.get("/events/:event_id/produtos", EventController.getAllProductsInEvent);
 routes.post("/login",UserController.loginUser);
 routes.get("/events", EventController.getAllEvents);
 routes.get("/events/:event_id/lotes", EventController.getLotesInEvent);
+routes.get("/events/:event_id/all/lotes", EventController.getAllLotesInEvent);
 routes.post("/register/:event_id", EventController.registerParticipanteInEvent);
 routes.post("/events/:event_id/inscricoes/find", UserController.getLoteIdAndUserId);
 routes.get("/lote/:lote_id/inscricoes/user/:user_id/", UserController.getUserInformation);
 routes.post(
   "/lote/:lote_id/user/:user_id/realizar-pagamento",
   UserController.realizarPagamento
+);
+routes.put(
+  "/lote/:lote_id/change_inscricoes_visibility",
+  EventController.toggleLoteAtivo
 );
 routes.get(
   "/events/:id_evento/atividades",

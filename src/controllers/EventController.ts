@@ -41,6 +41,39 @@ export default class EventController {
     }
   }
 
+  static async toggleLoteAtivo(req: Request, res: Response) {
+    try {
+      const { lote_id } = req.params;
+
+      await LoteRepository.toggleLoteAtivo(lote_id);
+
+      return res.status(200).send("Campo ativo do lote alternado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao alternar o campo ativo do lote:", error);
+
+      let errorMessage = "Erro ao alternar o campo ativo do lote.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return res.status(400).json({ message: errorMessage });
+    }
+  }
+
+  static async getAllLotesInEvent(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      const lotes_in_event = await LoteRepository.getAllLotesByEventID(
+        event_id
+      );
+
+      return res.status(200).json(lotes_in_event);
+    } catch (error) {
+      return res.status(400).send("informações inválidas");
+    }
+  }
+
   static async getLotesInEvent(req: Request, res: Response) {
     try {
       const { event_id } = req.params;

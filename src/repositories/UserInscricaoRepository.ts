@@ -203,6 +203,7 @@ export default class UserInscricaoRepository {
         select: {
           uuid_evento: true,
           nome: true,
+          date: true
         },
       });
 

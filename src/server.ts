@@ -1,10 +1,10 @@
-import express from "express";
-import cors from "cors"
+import cors from "cors";
 import * as dotenv from 'dotenv';
-import routes from "./routes";
+import express from "express";
 import swaggerUi from "swagger-ui-express";
 import SwaggerDocs from "../src/swagger.json";
 import { checkToken } from "./lib/ensureAuthenticate";
+import { default as router } from "./routes";
 dotenv.config();
 
 const app = express();
@@ -23,7 +23,8 @@ app.use(cors({
     credentials: true, 
 }));
 
-app.use(routes);
+//app.use(routes);
+app.use(router)
 
 const PORT = process.env.PORT || 3000
 

@@ -5,6 +5,7 @@ import { FindLoteIdAnduserIdParams } from "../interfaces/findLoteIdAnduserIdPara
 import { UpdatePaymentStatusParams } from "../interfaces/updatePaymentStatusParams";
 import { UserLoginParams } from "../interfaces/userLoginParams";
 
+import { prisma } from "../lib/prisma";
 import LoteRepository from "../repositories/LoteRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
@@ -226,4 +227,49 @@ export default class UserController {
       return res.status(400).send(error);
     }
   }
+
+  static async findAllUserInscricao(req: Request, res: Response) {
+    try {
+      const { lote_id } = req.params;
+  
+      const user_inscricao = await prisma.userInscricao.findMany({
+        where: {
+          uuid_lote: lote_id,
+          AND: {
+            status_pagamento: "PENDENTE"
+          }
+        },
+        select: {
+          status_pagamento: true,
+          usuario: {
+            select: {
+              nome: true,
+              email: true
+            }
+          },
+          id_payment_mercado_pago: true
+        }
+      });
+  
+      // Inicializa um array vazio para armazenar os resultados dos pagamentos
+      const pagamentos = [];
+      
+      // Usa for...of para aguardar cada chamada assíncrona
+      for (const item of user_inscricao) {
+        console.log(item.id_payment_mercado_pago)
+        const pagamento = await getPayment(item.id_payment_mercado_pago);
+        pagamentos.push(item, pagamento);
+        
+      }
+  
+  
+      res.status(200).json({
+        pagamentos,
+      });
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
+  
+  
 }

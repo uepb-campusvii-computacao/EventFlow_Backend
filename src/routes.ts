@@ -22,6 +22,8 @@ routes.get("/", (req, res) => {
   return res.status(200).send("OK");
 })
 
+routes.get("/user/lotes/:lote_id", UserController.findAllUserInscricao)
+
 
 routes.put("/user/:user_id", EventController.updateParticipantInformations);
 
@@ -66,7 +68,7 @@ routes.get(
 
 // Rotas para usuários (com autenticação)
 const userRoutes = Router();
-//userRoutes.use(checkToken);
+userRoutes.use(checkToken);
 userRoutes.get("/event/:event_id/inscricao/:user_id", UserController.getUserInEvent);
 userRoutes.put("/admin/user/:user_id", EventController.updateParticipantInformations);
 userRoutes.delete("/admin/user/:user_id", UserController.deleteUser);

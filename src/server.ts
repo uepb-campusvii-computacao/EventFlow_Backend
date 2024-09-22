@@ -3,8 +3,8 @@ import * as dotenv from 'dotenv';
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import SwaggerDocs from "../src/swagger.json";
-import { checkToken } from "./lib/ensureAuthenticate";
-import { default as router } from "./routes";
+import { checkToken } from "./middlewares/ensureAuthenticate";
+import router from "./routes";
 dotenv.config();
 
 const app = express();

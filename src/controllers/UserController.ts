@@ -41,6 +41,7 @@ export default class UserController {
     const token = jsonwebtoken.sign(
       {
         id: userExists.uuid_user,
+        role: userExists.perfil,
       },
       String(process.env.SECRET),
       {

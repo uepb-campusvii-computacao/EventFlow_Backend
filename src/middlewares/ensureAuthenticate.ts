@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import jsonwebtoken from "jsonwebtoken";
 
 export async function checkToken(
@@ -22,6 +22,7 @@ export async function checkToken(
       }
 
       req.params.id = decoded.id;
+      req.params.role = decoded.role;
 
       next();
     }

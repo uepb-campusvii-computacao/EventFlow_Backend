@@ -6,10 +6,10 @@ import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 
 export default class ActivityController {
   static async getSubscribersInActivity(req: Request, res: Response) {
-    const { id_atividade } = req.params;
+    const { atividade_id } = req.params;
 
     const subscribers =
-      await UserAtividadeRepository.findAllSubscribersInActivity(id_atividade);
+      await UserAtividadeRepository.findAllSubscribersInActivity(atividade_id);
 
     if (!subscribers) {
       return res.status(400).send("Atividade não encontrada");

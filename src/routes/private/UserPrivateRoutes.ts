@@ -10,25 +10,25 @@ UserPrivateRoutes.use(checkToken);
 
 UserPrivateRoutes.put(
   "/user/:user_id",
-  [checkToken, verifyAdminUserRole],
+  verifyAdminUserRole,
   EventController.updateParticipantInformations
 );
 
 UserPrivateRoutes.delete(
   "/user/:user_id",
-  [checkToken, verifyAdminUserRole],
+  verifyAdminUserRole,
   UserController.deleteUser
 );
 
 UserPrivateRoutes.get(
   "/user/:user_id/events",
-  [checkToken, verifyAdminUserRole],
+  verifyAdminUserRole,
   EventController.getAllEventsByIdUser
 );
 
 UserPrivateRoutes.put(
   "/user/:user_id/atividades/troca",
-  [checkToken, verifyAdminUserRole],
+  verifyAdminUserRole,
   ActivityController.upadateUserActivity
 );
 

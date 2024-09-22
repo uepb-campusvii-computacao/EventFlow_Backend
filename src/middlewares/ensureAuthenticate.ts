@@ -22,7 +22,6 @@ export async function checkToken(
       }
 
       req.params.id = decoded.id;
-      req.params.role = decoded.role;
 
       next();
     }

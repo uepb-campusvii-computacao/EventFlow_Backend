@@ -10,7 +10,7 @@ export async function checkToken(
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({message: "Acesso negado" });
+    return res.status(401).json({ message: "Acesso negado" });
   }
 
   jsonwebtoken.verify(
@@ -18,10 +18,10 @@ export async function checkToken(
     process.env.SECRET || "",
     (err: jsonwebtoken.VerifyErrors | null, decoded?: any) => {
       if (err) {
-        return res.status(401).send({message: "Token inválido"});
+        return res.status(401).send({ message: "Token inválido" });
       }
 
-      req.params.id = decoded.id;
+      res.locals.id = decoded.id;
 
       next();
     }

@@ -9,6 +9,7 @@ export async function verifyAdminUserRoleInEvent(
 ) {
   const event_id = req.params.event_id;
   const id = res.locals.id;
+  console.log(id, event_id)
 
   const response = await prisma.userEvento.findUnique({
     where: {
@@ -20,7 +21,7 @@ export async function verifyAdminUserRoleInEvent(
   });
 
   if (response?.perfil === Perfil.PARTICIPANTE) {
-    return res.status(403).send({ message: "Acesso negado", res: response });
+    return res.status(403).send({ message: "Acesso negado" });
   }
 
   next();

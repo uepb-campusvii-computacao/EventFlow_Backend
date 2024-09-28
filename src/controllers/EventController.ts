@@ -198,10 +198,10 @@ export default class EventController {
 
   static async getAllSubscribersInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_subscribers =
-        await UserInscricaoRepository.projectionTableCredenciamento(id_evento);
+        await UserInscricaoRepository.projectionTableCredenciamento(event_id);
 
       if (!all_subscribers) {
         return res.status(400).send("Evento não encontrado");
@@ -216,10 +216,10 @@ export default class EventController {
 
   static async getAllFinancialInformationsInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_subscribers =
-        await UserInscricaoRepository.findAllSubscribersInEvent(id_evento);
+        await UserInscricaoRepository.findAllSubscribersInEvent(event_id);
 
       if (!all_subscribers) {
         return res.status(400).send("Evento não encontrado");
@@ -285,10 +285,10 @@ export default class EventController {
 
   static async getAllActivitiesInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_activities = await EventRepository.findAllActivitiesInEvent(
-        id_evento
+        event_id
       );
 
       if (!all_activities) {

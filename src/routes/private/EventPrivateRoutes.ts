@@ -20,7 +20,7 @@ EventPrivateRoutes.get(
 );
 
 EventPrivateRoutes.get(
-  "/events/:id_evento/inscricoes",
+  "/events/:event_id/inscricoes",
   verifyAdminUserRoleInEvent,
   EventController.getAllSubscribersInEvent
 );
@@ -32,13 +32,13 @@ EventPrivateRoutes.put(
 );
 
 EventPrivateRoutes.get(
-  "/events/:id_evento/atividades",
+  "/events/:event_id/atividades",
   verifyAdminUserRoleInEvent,
   EventController.getAllActivitiesInEvent
 );
 
 EventPrivateRoutes.get(
-  "/events/:id_evento/inscricoes/todos",
+  "/events/:event_id/inscricoes/todos",
   verifyAdminUserRoleInEvent,
   EventController.getAllFinancialInformationsInEvent
 );

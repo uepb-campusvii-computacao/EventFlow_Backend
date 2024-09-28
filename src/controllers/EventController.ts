@@ -7,6 +7,7 @@ import EventRepository from "../repositories/EventRepository";
 import LoteRepository from "../repositories/LoteRepository";
 import OrderRepository from "../repositories/OrderRepository";
 import ProductRepository from "../repositories/ProductRepository";
+import UserEventRepository from "../repositories/UserEventRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
 
@@ -31,7 +32,15 @@ export default class EventController {
         lote_id,
       });
 
-      return res.status(200).json(user);
+      const user_id = user.uuid_user;
+      const event_id = req.params.event_id;
+
+      const userEvent = await UserEventRepository.registerUserInEvent({
+        user_id,
+        event_id,
+      });
+
+      return res.status(200).json({ user: user, userEvent: userEvent });
     } catch (error) {
       if (error instanceof Error) {
         return res.status(400).send(error.message);
@@ -102,6 +111,8 @@ export default class EventController {
         workshop,
         oficina,
       } = req.body;
+
+      console.log(req.body);
 
       const activities: { id: string; type: TipoAtividade }[] = [];
 
@@ -187,10 +198,10 @@ export default class EventController {
 
   static async getAllSubscribersInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_subscribers =
-        await UserInscricaoRepository.projectionTableCredenciamento(id_evento);
+        await UserInscricaoRepository.projectionTableCredenciamento(event_id);
 
       if (!all_subscribers) {
         return res.status(400).send("Evento não encontrado");
@@ -205,10 +216,10 @@ export default class EventController {
 
   static async getAllFinancialInformationsInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_subscribers =
-        await UserInscricaoRepository.findAllSubscribersInEvent(id_evento);
+        await UserInscricaoRepository.findAllSubscribersInEvent(event_id);
 
       if (!all_subscribers) {
         return res.status(400).send("Evento não encontrado");
@@ -274,10 +285,10 @@ export default class EventController {
 
   static async getAllActivitiesInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_activities = await EventRepository.findAllActivitiesInEvent(
-        id_evento
+        event_id
       );
 
       if (!all_activities) {

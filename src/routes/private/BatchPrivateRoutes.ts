@@ -1,4 +1,5 @@
 import express from "express";
+import EventController from "../../controllers/EventController";
 import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 
@@ -9,5 +10,7 @@ BatchPrivateRoutes.put(
   "/lote/:lote_id/inscricoes/:user_id",
   UserController.updatePaymentStatus
 );
+
+BatchPrivateRoutes.post("/lote/:lote_id/register", EventController.registerParticipanteInEvent);
 
 export default BatchPrivateRoutes;

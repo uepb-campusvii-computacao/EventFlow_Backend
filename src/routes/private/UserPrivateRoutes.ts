@@ -23,7 +23,6 @@ UserPrivateRoutes.delete(
 
 UserPrivateRoutes.get(
   "/user/:user_id/events",
-  verifyAdminUserRoleInEvent,
   EventController.getAllEventsByIdUser
 );
 

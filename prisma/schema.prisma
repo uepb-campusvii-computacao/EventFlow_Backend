@@ -36,8 +36,9 @@ model Evento {
   uuid_evento     String       @id @default(uuid())
   uuid_user_owner String
   nome            String       @unique
-  banner_img_url  String?
+  banner_img_url  String?      @db.LongText
   date            DateTime?
+  conteudo         String       @db.LongText
   usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
   lote            Lote[]
   atividade       Atividade[]
@@ -101,8 +102,8 @@ model UserInscricao {
   uuid_user               String
   uuid_lote               String
   credenciamento          Boolean         @default(false)
-  id_payment_mercado_pago String
-  expiration_datetime     DateTime
+  id_payment_mercado_pago String?
+  expiration_datetime     DateTime?
   status_pagamento        StatusPagamento @default(PENDENTE)
   usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
   lote                    Lote            @relation(fields: [uuid_lote], references: [uuid_lote])

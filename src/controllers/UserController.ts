@@ -197,10 +197,15 @@ export default class UserController {
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
 
-      console.log(user_inscricao);
-      const payment = await getPayment(user_inscricao!.id_payment_mercado_pago);
+      if (user_inscricao?.id_payment_mercado_pago) {
+        const payment = await getPayment(
+          user_inscricao!.id_payment_mercado_pago
+        );
 
-      return res.status(200).json(payment);
+        return res.status(200).json(payment);
+      }
+
+      return res.status(200).json({ message: "Inscrição Gratuita" });
     } catch (error) {
       return res.status(400).send(error);
     }
@@ -295,14 +300,13 @@ export default class UserController {
         },
       });
 
-      // Inicializa um array vazio para armazenar os resultados dos pagamentos
       const pagamentos = [];
 
-      // Usa for...of para aguardar cada chamada assíncrona
       for (const item of user_inscricao) {
-        console.log(item.id_payment_mercado_pago);
-        const pagamento = await getPayment(item.id_payment_mercado_pago);
-        pagamentos.push(item, pagamento);
+        if (item.id_payment_mercado_pago) {
+          const pagamento = await getPayment(item.id_payment_mercado_pago);
+          pagamentos.push(item, pagamento);
+        }
       }
 
       res.status(200).json({

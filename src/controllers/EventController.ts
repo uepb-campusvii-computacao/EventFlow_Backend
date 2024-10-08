@@ -205,7 +205,7 @@ export default class EventController {
 
   static async getAllEventsByIdUser(req: Request, res: Response) {
     try {
-      const { user_id } = req.params;
+      const user_id = res.locals.id;
 
       const eventos = await UserInscricaoRepository.findAllEventsByUserId(
         user_id

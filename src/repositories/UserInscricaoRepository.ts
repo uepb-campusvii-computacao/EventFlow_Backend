@@ -198,14 +198,20 @@ export default class UserInscricaoRepository {
     try {
       const eventos = await prisma.evento.findMany({
         where: {
-          uuid_user_owner: uuid_user,
+          UserEvento: {
+            every: {
+              uuid_user
+            }
+          }
         },
         select: {
           uuid_evento: true,
           nome: true,
-          date: true
+          date: true,
         },
       });
+
+      console.log("teste")
 
       return eventos;
     } catch (error) {

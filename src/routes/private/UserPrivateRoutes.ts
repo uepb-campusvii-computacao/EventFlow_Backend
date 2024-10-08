@@ -22,7 +22,7 @@ UserPrivateRoutes.delete(
 );
 
 UserPrivateRoutes.get(
-  "/user/:user_id/events",
+  "/user/my-events",
   EventController.getAllEventsByIdUser
 );
 

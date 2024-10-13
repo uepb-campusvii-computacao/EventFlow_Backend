@@ -1,23 +1,23 @@
-import { Prisma } from "@prisma/client";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
 
 export default class UserRepository {
   static async createUser(
-    tx: Prisma.TransactionClient,
     {
       nome,
       nome_cracha,
+      senha,
       email,
       instituicao,
     }: {
       nome: string;
+      senha: string;
       nome_cracha: string;
       email: string;
       instituicao: string;
     }
   ) {
-    const existingUser = await tx.usuario.findUnique({
+    const existingUser = await prisma.usuario.findUnique({
       where: {
         email,
       },
@@ -29,9 +29,10 @@ export default class UserRepository {
       );
     }
 
-    return await tx.usuario.create({
+    return await prisma.usuario.create({
       data: {
         nome,
+        senha,
         nome_cracha,
         email,
         instituicao,

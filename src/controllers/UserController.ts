@@ -5,6 +5,8 @@ import { FindLoteIdAnduserIdParams } from "../interfaces/findLoteIdAnduserIdPara
 import { UpdatePaymentStatusParams } from "../interfaces/updatePaymentStatusParams";
 import { UserLoginParams } from "../interfaces/userLoginParams";
 
+import { z, ZodError } from "zod";
+import { prisma } from "../lib/prisma";
 import LoteRepository from "../repositories/LoteRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
@@ -52,12 +54,55 @@ export default class UserController {
       .json({ token: token, user_id: userExists.uuid_user });
   }
 
-  static async gerarSenha(req: Request, res: Response) {
-    const params = req.body;
+  static async registerUser(req: Request, res: Response) {
+    try {
+      const registerUserSchema = z
+        .object({
+          name: z.string(),
+          email: z.string().email("Invalid email format"),
+          nickname: z.string(),
+          organization: z.string(),
+          password: z
+            .string()
+            .min(8, "Password must be at least 8 characters long"),
+          confirm_password: z.string(),
+        })
+        .refine((data) => data.password === data.confirm_password, {
+          message: "Passwords do not match",
+          path: ["confirm_password"],
+        });
 
-    const senha = await encryptPassword(params.senha);
+      const { name, email, nickname, password, organization } =
+        registerUserSchema.parse(req.body);
 
-    return res.json({ senha: senha });
+      const password_encrypted = await encryptPassword(password);
+
+      const user = await UserRepository.createUser({
+        nome: name,
+        nome_cracha: nickname,
+        senha: password_encrypted,
+        email: email,
+        instituicao: organization,
+      });
+
+      return res.status(201).json(user);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
+    }
   }
 
   static async getLoteIdAndUserId(req: Request, res: Response) {
@@ -124,14 +169,18 @@ export default class UserController {
       const response = {
         user_name: user.nome,
         email: user.email,
+        nome_cracha: user.nome_cracha,
+        instituicao: user.instituicao,
         inscricao: {
           status: user_inscricao?.status_pagamento,
           nome_lote: lote.nome,
           preco: lote.preco,
+          uuid_evento: lote.uuid_evento,
         },
         atividades: atividades.map((atividade) => ({
           nome: atividade.nome,
-          tipo: atividade.tipo_atividade,
+          tipo_atividade: atividade.tipo_atividade,
+          uuid_atividade: atividade.uuid_atividade,
         })),
       };
 
@@ -148,10 +197,15 @@ export default class UserController {
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
 
-      console.log(user_inscricao);
-      const payment = await getPayment(user_inscricao!.id_payment_mercado_pago);
+      if (user_inscricao?.id_payment_mercado_pago) {
+        const payment = await getPayment(
+          user_inscricao!.id_payment_mercado_pago
+        );
 
-      return res.status(200).json(payment);
+        return res.status(200).json(payment);
+      }
+
+      return res.status(200).json({ message: "Inscrição Gratuita" });
     } catch (error) {
       return res.status(400).send(error);
     }
@@ -220,6 +274,46 @@ export default class UserController {
       return res.status(200).send("Usuario deletado");
     } catch (error) {
       return res.status(400).send(error);
+    }
+  }
+
+  static async findAllUserInscricao(req: Request, res: Response) {
+    try {
+      const { lote_id } = req.params;
+
+      const user_inscricao = await prisma.userInscricao.findMany({
+        where: {
+          uuid_lote: lote_id,
+          AND: {
+            status_pagamento: "PENDENTE",
+          },
+        },
+        select: {
+          status_pagamento: true,
+          usuario: {
+            select: {
+              nome: true,
+              email: true,
+            },
+          },
+          id_payment_mercado_pago: true,
+        },
+      });
+
+      const pagamentos = [];
+
+      for (const item of user_inscricao) {
+        if (item.id_payment_mercado_pago) {
+          const pagamento = await getPayment(item.id_payment_mercado_pago);
+          pagamentos.push(item, pagamento);
+        }
+      }
+
+      res.status(200).json({
+        pagamentos,
+      });
+    } catch (error) {
+      res.status(400).send(error);
     }
   }
 }

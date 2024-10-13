@@ -79,4 +79,33 @@ export default class ActivityRepository {
       _count: activity._count.userAtividade,
     }));
   }
+
+  static async createActivity({
+    uuid_evento,
+    nome,
+    max_participants,
+    data,
+    descricao,
+    tipo_atividade
+  }: {
+    uuid_evento: string;
+    nome: string;
+    max_participants?:number;
+    data?: Date;
+    descricao: string;
+    tipo_atividade: TipoAtividade;
+  }){
+    const activity = await prisma.atividade.create({
+      data: {
+        uuid_evento,
+        nome,
+        date: data,
+        descricao,
+        max_participants,
+        tipo_atividade
+      }
+    });
+
+    return activity;
+  }
 }

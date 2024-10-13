@@ -161,4 +161,36 @@ export default class EventRepository {
 
     return event;
   }
+
+  static async createEvent({
+    uuid_user_owner,
+    nome,
+    banner_img_url,
+    data,
+    conteudo,
+  }: {
+    uuid_user_owner: string;
+    nome: string;
+    banner_img_url?: string;
+    data?: Date;
+    conteudo: string;
+  }) {
+    const event = await prisma.evento.create({
+      data: {
+        uuid_user_owner,
+        conteudo,
+        nome,
+        banner_img_url,
+        date: data,
+        UserEvento: {
+          create: {
+            perfil: "ORGANIZADOR",
+            uuid_user: uuid_user_owner,
+          },
+        },
+      },
+    });
+
+    return event;
+  }
 }

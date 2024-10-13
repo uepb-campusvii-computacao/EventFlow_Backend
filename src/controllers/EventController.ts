@@ -395,4 +395,45 @@ export default class EventController {
         .json({ error: "Erro ao obter informações financeiras" });
     }
   }
+
+  static async createEvent(req: Request, res: Response) {
+    try {
+      const uuid_user = res.locals.id;
+
+      const createEventParams = z
+        .object({
+          nome: z.string(),
+          banner_img_url: z.string().optional(),
+          data: z.preprocess((arg) => {
+            if (typeof arg === "string" || arg instanceof Date)
+              return new Date(arg);
+          }, z.date().optional()),
+          conteudo: z.string(),
+        })
+        .parse(req.body);
+
+      const event = await EventRepository.createEvent({
+        uuid_user_owner: uuid_user,
+        ...createEventParams,
+      });
+
+      return res.status(200).json(event);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
+    }
+  }
 }

@@ -316,4 +316,18 @@ export default class UserController {
       res.status(400).send(error);
     }
   }
+
+  static async findUser(req: Request, res: Response) {
+    try {
+      const { id } = res.locals;
+
+      const user = await UserRepository.findUserById(id)
+
+      const { uuid_user: _, senha, ...userWithoutSensitiveData } = user;
+  
+      res.status(200).json(userWithoutSensitiveData);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
 }

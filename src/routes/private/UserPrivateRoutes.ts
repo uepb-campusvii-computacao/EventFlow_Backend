@@ -9,6 +9,11 @@ import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
 const UserPrivateRoutes = express.Router();
 UserPrivateRoutes.use(checkToken);
 
+UserPrivateRoutes.get(
+  "/user/",
+  UserController.findUser
+);
+
 UserPrivateRoutes.put(
   "/user/:user_id",
   verifyAdminUserRoleInEvent,

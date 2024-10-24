@@ -18,43 +18,48 @@ export default class UserAtividadeRepository {
     user_uuid: string,
     atividades: RegisterParticipanteParams["atividades"]
   ) {
-    const activities_ids = [
-      atividades?.minicurso_id,
-      atividades?.workshop_id,
-      atividades?.oficina_id,
-    ];
-
-    for (const uuid_atividade of activities_ids) {
-      if (uuid_atividade) {
+    for (const item of atividades || []) {
+      try {
+        console.log(item.atividade_id);
+        
+        // Verifica se a atividade existe
         const activity = await tx.atividade.findUnique({
           where: {
-            uuid_atividade,
+            uuid_atividade: item.atividade_id,
           },
         });
-
+  
         if (!activity) {
           throw new Error("Atividade não encontrada");
         }
-
+  
+        // Conta o número de participantes
         const count = await tx.userAtividade.count({
           where: {
-            uuid_atividade,
+            uuid_atividade: item.atividade_id,
           },
         });
-
+  
+        // Verifica se a atividade está cheia
         if (activity.max_participants && count >= activity.max_participants) {
           throw new Error(`A atividade ${activity.nome} está cheia`);
         }
-
+  
+        // Registra o usuário na atividade
         await tx.userAtividade.create({
           data: {
             uuid_user: user_uuid,
-            uuid_atividade,
+            uuid_atividade: item.atividade_id,
           },
         });
+  
+      } catch (error) {
+        console.error(`Erro ao registrar na atividade ${item.atividade_id}`);
+        throw error; // Lança o erro novamente para quem chamou a função
       }
     }
   }
+  
 
   static async changeUserAtividade(
     uuid_atividade_atual: string,

@@ -1,12 +1,14 @@
+import { Perfil } from "@prisma/client";
+
 export interface RegisterParticipanteParams {
-    nome: string;
-    nome_cracha: string;
-    email: string;
-    instituicao: string;
-    atividades?: {
-      minicurso_id?: string;
-      workshop_id?: string;
-      oficina_id?: string;
-    };
-    lote_id: string;
-  }
+  nome: string;
+  uuid_user: string;
+  nome_cracha: string;
+  email: string;
+  perfil: Perfil;
+  instituicao: string;
+  atividades?: {
+    atividade_id: string;
+  }[];
+  lote_id: string;
+}

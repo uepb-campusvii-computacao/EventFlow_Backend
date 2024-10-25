@@ -1,19 +1,37 @@
 import { Perfil } from "@prisma/client";
-import { RegisterUserInEventParams } from "../interfaces/registerUserInEventParams";
 import { prisma } from "../lib/prisma";
+import EventRepository from "./EventRepository";
 
 export default class UserEventRepository {
   static async registerUserInEvent({
-    user_id,
-    event_id,
+    uuid_user,
+    lote_id,
     perfil,
-  }: RegisterUserInEventParams) {
+    atividades,
+  }: {
+    uuid_user: string;
+    perfil: Perfil;
+    atividades?: {
+      atividade_id: string;
+    }[];
+    lote_id: string;
+  }) {
     return prisma.$transaction(async (tx) => {
+      const existingLote = await tx.lote.findFirst({
+        where: {
+          uuid_lote: lote_id,
+        },
+      });
+
+      if (!existingLote) {
+        throw new Error("Lote não encontrado!");
+      }
+
       const existingUserEvent = await tx.userEvento.findUnique({
         where: {
           uuid_user_uuid_evento: {
-            uuid_user: user_id,
-            uuid_evento: event_id,
+            uuid_user,
+            uuid_evento: existingLote?.uuid_evento,
           },
         },
       });
@@ -22,12 +40,18 @@ export default class UserEventRepository {
         throw new Error("Usuário já participa deste evento");
       }
 
-      return await tx.userEvento.create({
+      await tx.userEvento.create({
         data: {
-          uuid_user: user_id,
-          uuid_evento: event_id,
+          uuid_user,
+          uuid_evento: existingLote.uuid_evento,
           perfil: perfil || Perfil.PARTICIPANTE,
         },
+      });
+
+      await EventRepository.registerParticipante(tx, {
+        user_id: uuid_user,
+        lote_id,
+        atividades,
       });
     });
   }

@@ -6,9 +6,11 @@ const EventPublicRoutes = express.Router();
 
 EventPublicRoutes.get("/events", EventController.getAllEvents);
 
+EventPublicRoutes.get("/events/:event_id", EventController.getEventInformation);
+
 EventPublicRoutes.get(
   "/events/:event_id/lotes",
-  EventController.getLotesInEvent
+  EventController.getLotesAtivosInEvent
 );
 
 EventPublicRoutes.get(

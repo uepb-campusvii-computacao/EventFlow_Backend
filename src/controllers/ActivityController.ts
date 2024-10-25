@@ -1,7 +1,9 @@
+import { TipoAtividade } from "@prisma/client";
 import { Request, Response } from "express";
+import { z, ZodError } from "zod";
 import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
 import { UpdateActivityParams } from "../interfaces/updateActivityParams";
-import ActivityRepository from "../repositories/ActivityRepository";
+import { default as ActivityRepository } from "../repositories/ActivityRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 
 export default class ActivityController {
@@ -49,7 +51,9 @@ export default class ActivityController {
     try {
       const { atividade_id } = req.params;
 
-      const activity = await ActivityRepository.findActivityPubInfoById(atividade_id);
+      const activity = await ActivityRepository.findActivityPubInfoById(
+        atividade_id
+      );
 
       return res.status(200).json({ ...activity });
     } catch (error) {
@@ -65,7 +69,9 @@ export default class ActivityController {
         uuid_atividade_nova,
       }: ChangeActivityParamsRequest = req.body;
 
-      const activity_exists = await ActivityRepository.findActivityById(uuid_atividade_nova);
+      const activity_exists = await ActivityRepository.findActivityById(
+        uuid_atividade_nova
+      );
 
       if (!activity_exists) {
         throw new Error("UUID inválido!");
@@ -128,6 +134,50 @@ export default class ActivityController {
       return res.status(200).json(activity);
     } catch (error) {
       return res.status(400).send(error);
+    }
+  }
+
+  static async createActivity(req: Request, res: Response) {
+    try {
+      const uuid_user = res.locals.id;
+
+      const uuid_evento = req.params.event_id;
+
+      const createActivityParams = z
+        .object({
+          nome: z.string(),
+          max_participants: z.number().optional(),
+          data: z.preprocess((arg) => {
+            if (typeof arg === "string" || arg instanceof Date)
+              return new Date(arg);
+          }, z.date().optional()),
+          descricao: z.string(),
+          tipo_atividade: z.nativeEnum(TipoAtividade),
+        })
+        .parse(req.body);
+
+      const activity = await ActivityRepository.createActivity({
+        uuid_evento,
+        ...createActivityParams,
+      });
+
+      return res.status(200).json(activity);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
     }
   }
 }

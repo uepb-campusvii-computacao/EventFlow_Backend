@@ -9,7 +9,6 @@ export async function verifyAdminUserRoleInEvent(
 ) {
   const event_id = req.params.event_id;
   const id = res.locals.id;
-  console.log(id, event_id)
 
   const response = await prisma.userEvento.findUnique({
     where: {

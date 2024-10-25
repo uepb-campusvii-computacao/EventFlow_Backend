@@ -3,11 +3,15 @@ import { prisma } from "../lib/prisma";
 
 export default class LoteRepository {
   static async findLoteById(uuid_lote: string) {
-    const lote = await prisma.lote.findUniqueOrThrow({
+    const lote = await prisma.lote.findUnique({
       where: {
         uuid_lote,
       },
     });
+
+    if(!lote){
+      throw new Error("Lote não encontrado");
+    }
 
     return lote;
   }

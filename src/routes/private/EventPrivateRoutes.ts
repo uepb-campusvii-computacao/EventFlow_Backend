@@ -1,4 +1,5 @@
 import express from "express";
+import ActivityController from "../../controllers/ActivityController";
 import EventController from "../../controllers/EventController";
 import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
@@ -41,6 +42,17 @@ EventPrivateRoutes.get(
   "/events/:event_id/inscricoes/todos",
   verifyAdminUserRoleInEvent,
   EventController.getAllFinancialInformationsInEvent
+);
+
+EventPrivateRoutes.post(
+  "/events/create",
+  EventController.createEvent
+);
+
+EventPrivateRoutes.post(
+  "/events/:event_id/atividades/create",
+  verifyAdminUserRoleInEvent,
+  ActivityController.createActivity
 );
 
 export default EventPrivateRoutes;

@@ -9,6 +9,11 @@ import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
 const UserPrivateRoutes = express.Router();
 UserPrivateRoutes.use(checkToken);
 
+UserPrivateRoutes.get(
+  "/user/",
+  UserController.findUser
+);
+
 UserPrivateRoutes.put(
   "/user/:user_id",
   verifyAdminUserRoleInEvent,
@@ -22,8 +27,7 @@ UserPrivateRoutes.delete(
 );
 
 UserPrivateRoutes.get(
-  "/user/:user_id/events",
-  verifyAdminUserRoleInEvent,
+  "/user/my-events",
   EventController.getAllEventsByIdUser
 );
 
@@ -31,6 +35,11 @@ UserPrivateRoutes.put(
   "/user/:user_id/atividades/troca",
   verifyAdminUserRoleInEvent,
   ActivityController.upadateUserActivity
+);
+
+UserPrivateRoutes.get(
+  "/user/events/:event_id/my-activities",
+  EventController.getAllActivitiesInEventByUser
 );
 
 export default UserPrivateRoutes;

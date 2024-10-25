@@ -17,17 +17,17 @@ export default class UserInscricaoRepository {
     tx: Prisma.TransactionClient,
     user_uuid: string,
     lote_id: string,
-    payment_id: string,
-    expiration_date: string
+    payment_id?: string,
+    expiration_date?: string,
+    status_pagamento?: StatusPagamento,
   ) {
     return await tx.userInscricao.create({
       data: {
         uuid_user: user_uuid,
         uuid_lote: lote_id,
-        credenciamento: false,
-        id_payment_mercado_pago: payment_id,
-        expiration_datetime: expiration_date,
-        status_pagamento: "PENDENTE",
+        id_payment_mercado_pago: payment_id || null,
+        expiration_datetime: expiration_date || null,
+        status_pagamento: status_pagamento,
       },
     });
   }
@@ -198,14 +198,20 @@ export default class UserInscricaoRepository {
     try {
       const eventos = await prisma.evento.findMany({
         where: {
-          uuid_user_owner: uuid_user,
+          UserEvento: {
+            every: {
+              uuid_user
+            }
+          }
         },
         select: {
           uuid_evento: true,
           nome: true,
-          date: true
+          date: true,
         },
       });
+
+      console.log("teste")
 
       return eventos;
     } catch (error) {

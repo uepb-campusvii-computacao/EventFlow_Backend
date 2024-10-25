@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -22,26 +22,27 @@ model Usuario {
   email         String          @unique
   senha         String?
   active        Boolean         @default(true)
-  perfil        Perfil          @default(PARTICIPANTE)
   evento        Evento[]
   userAtividade UserAtividade[]
   userInscricao UserInscricao[]
   Pagamento     Pagamento[]
   Venda         Venda[]
+  UserEvento    UserEvento[]
 
   @@map("tb_usuario")
 }
 
 model Evento {
-  uuid_evento     String      @id @default(uuid())
+  uuid_evento     String       @id @default(uuid())
   uuid_user_owner String
-  nome            String      @unique
+  nome            String       @unique
   banner_img_url  String?
   date            DateTime?
-  usuario         Usuario     @relation(fields: [uuid_user_owner], references: [uuid_user])
+  usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
   lote            Lote[]
   atividade       Atividade[]
   Produto         Produto[]
+  UserEvento      UserEvento[]
 
   @@map("tb_evento")
 }
@@ -71,6 +72,18 @@ model Atividade {
   userAtividade    UserAtividade[]
 
   @@map("tb_atividade")
+}
+
+model UserEvento {
+  uuid_user   String
+  uuid_evento String
+  create_at   DateTime @default(now())
+  perfil      Perfil   @default(PARTICIPANTE)
+  usuario     Usuario  @relation(fields: [uuid_user], references: [uuid_user])
+  evento      Evento   @relation(fields: [uuid_evento], references: [uuid_evento])
+
+  @@id([uuid_user, uuid_evento])
+  @@map("tb_user_evento")
 }
 
 model UserAtividade {
@@ -140,8 +153,9 @@ model Venda {
 }
 
 enum Perfil {
-  ADMIN
+  ADMINISTRADOR
   PARTICIPANTE
+  ORGANIZADOR
 }
 
 enum TipoAtividade {

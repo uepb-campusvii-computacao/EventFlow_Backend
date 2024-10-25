@@ -322,6 +322,30 @@ export default class EventController {
     }
   }
 
+  static async getAllActivitiesInEventByUser(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+      const { id } = res.locals;
+  
+      const allActivities = await EventRepository.findAllUserActivities(event_id, id);
+  
+      const activityResults: Record<string, any[]> = {};
+
+      allActivities.forEach(activity => {
+        const type = activity.tipo_atividade.toLowerCase();
+        if (!activityResults[type]) {
+          activityResults[type] = [];
+        }
+        activityResults[type].push(activity);
+      });
+  
+      return res.status(200).json(activityResults);
+    } catch (error) {
+      return res.status(400).send(error);
+    }
+  }
+  
+
   static async getAllActivitiesInEventOrdenateByTipo(
     req: Request,
     res: Response
@@ -329,24 +353,21 @@ export default class EventController {
     try {
       const { id_evento } = req.params;
 
-      const minicursos = await ActivityRepository.findActivitiesInEvent(
-        id_evento,
-        "MINICURSO"
-      );
-      const oficinas = await ActivityRepository.findActivitiesInEvent(
-        id_evento,
-        "OFICINA"
-      );
-      const workshops = await ActivityRepository.findActivitiesInEvent(
-        id_evento,
-        "WORKSHOP"
-      );
+      const activityTypes = Object.values(TipoAtividade);
 
-      return res.status(200).json({
-        minicursos,
-        oficinas,
-        workshops,
-      });
+      const activityResults = await activityTypes.reduce<
+        Promise<Record<string, any>>
+      >(async (accPromise, type) => {
+        const acc = await accPromise;
+        const activities = await ActivityRepository.findActivitiesInEvent(
+          id_evento,
+          type
+        );
+        acc[type.toLowerCase()] = activities;
+        return acc;
+      }, Promise.resolve({}));
+
+      return res.status(200).json(activityResults);
     } catch (error) {
       return res.status(400).send("Informações invalidas!");
     }

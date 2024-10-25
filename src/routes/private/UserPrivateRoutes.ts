@@ -37,4 +37,9 @@ UserPrivateRoutes.put(
   ActivityController.upadateUserActivity
 );
 
+UserPrivateRoutes.get(
+  "/user/events/:event_id/my-activities",
+  EventController.getAllActivitiesInEventByUser
+);
+
 export default UserPrivateRoutes;

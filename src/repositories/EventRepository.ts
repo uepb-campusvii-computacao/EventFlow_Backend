@@ -79,6 +79,39 @@ export default class EventRepository {
     return activities;
   }
 
+  static async findAllUserActivities(uuid_evento: string, uuid_user: string) {
+    const activities = await prisma.userAtividade.findMany({
+      where: {
+        uuid_user,
+        AND: {
+          atividade: {
+            uuid_evento
+          }
+        }
+      },
+      select: {
+        atividade: {
+          select: {
+            uuid_atividade: true,
+            nome: true,
+            max_participants: true,
+            tipo_atividade: true,
+            _count: {
+              select: {
+                userAtividade: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return activities.map((activity) => ({
+      ...activity.atividade,
+      _count: activity.atividade._count.userAtividade,
+    }));
+  }
+
   static async getEventoPrecoById(uuid_evento: string) {
     const evento = await prisma.evento.findUniqueOrThrow({
       where: {

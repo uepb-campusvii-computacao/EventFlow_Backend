@@ -16,7 +16,6 @@ UserPrivateRoutes.get(
 
 UserPrivateRoutes.put(
   "/user/:user_id",
-  verifyAdminUserRoleInEvent,
   EventController.updateParticipantInformations
 );
 
@@ -38,7 +37,6 @@ UserPrivateRoutes.get(
 
 UserPrivateRoutes.put(
   "/user/:user_id/atividades/troca",
-  verifyAdminUserRoleInEvent,
   ActivityController.upadateUserActivity
 );
 

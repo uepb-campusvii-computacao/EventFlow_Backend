@@ -60,6 +60,7 @@ export default class UserRepository {
     user_uuid: string,
     atividades: RegisterParticipanteParams["atividades"]
   ) {
+    //Esses tipos de id pra minicurso, workshop e oficina não existem
     const activities_ids = [
       atividades?.minicurso_id,
       atividades?.workshop_id,
@@ -135,6 +136,40 @@ export default class UserRepository {
 
     return user;
   }
+
+  static async updateUserRecoverInfo(email : string, passwordResetToken : string, passwordResetExpires : Date){
+    return await prisma.usuario.update({
+      where: { email },
+      data: {
+          passwordResetToken,
+          passwordResetExpires
+      }
+    });
+  };
+
+  static async updateUserPassword(email : string, password : string){
+    return await prisma.usuario.update({
+      where: { email },
+      data: {
+          passwordResetToken : null,
+          passwordResetExpires: null,
+          senha: password
+      }
+    });
+  };
+  
+  static async findUserByToken(token: string) {
+    const users = await prisma.usuario.findMany({
+        where: {
+            passwordResetToken: token,
+            passwordResetExpires: {
+                gte: new Date(),
+            },
+        },
+    });
+    return users.length > 0 ? users[0] : null;
+  }
+
 
   static async findUserById(uuid_user: string) {
     const user = await prisma.usuario.findUniqueOrThrow({

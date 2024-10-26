@@ -22,6 +22,8 @@ model Usuario {
   email         String          @unique
   senha         String?
   active        Boolean         @default(true)
+  passwordResetToken  String?
+  passwordResetExpires DateTime?
   evento        Evento[]
   userAtividade UserAtividade[]
   userInscricao UserInscricao[]

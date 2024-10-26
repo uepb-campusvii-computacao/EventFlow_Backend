@@ -31,6 +31,11 @@ UserPrivateRoutes.get(
   EventController.getAllEventsByIdUser
 );
 
+UserPrivateRoutes.get(
+  "/user/in-event/:event_id",
+  EventController.checkUserRegistrationInEvent
+);
+
 UserPrivateRoutes.put(
   "/user/:user_id/atividades/troca",
   verifyAdminUserRoleInEvent,

@@ -32,6 +32,38 @@ export default class UserInscricaoRepository {
     });
   }
 
+  static async findUserInscriptionByEventId(user_id: string, event_id: string) {
+    try {
+      const lote = await prisma.lote.findFirst({
+        where: {
+          uuid_evento: event_id,
+        },
+      });
+
+      if (!lote) {
+        return null;
+      }
+
+      const userInscription = await prisma.userInscricao.findUnique({
+        where: {
+          uuid_lote_uuid_user: {
+            uuid_lote: lote.uuid_lote,
+            uuid_user: user_id,
+          },
+        },
+        include: {
+          usuario: true,
+          lote: true,
+        },
+      });
+
+      return userInscription;
+    } catch (error) {
+      console.error("Erro ao buscar inscrição do usuário:", error);
+      throw error;
+    }
+  }
+
   static async findLoteIdAndUserIdByEmail(event_id: string, email: string) {
     const user = await prisma.userInscricao.findFirst({
       where: {

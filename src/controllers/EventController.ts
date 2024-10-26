@@ -31,7 +31,6 @@ export default class EventController {
       const uuid_user = res.locals.id;
 
       const perfil: Perfil = "PARTICIPANTE";
-
       await UserEventRepository.registerUserInEvent({
         uuid_user,
         lote_id,
@@ -200,6 +199,24 @@ export default class EventController {
       return res.status(200).json(response);
     } catch (error) {
       return res.status(400).send(error);
+    }
+  }
+
+  static async checkUserRegistrationInEvent(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+      const user_id = res.locals.id;
+  
+      const userInscription = await UserInscricaoRepository.findUserInscriptionByEventId(user_id, event_id);
+
+      return res.status(200).json({
+        message: userInscription ? "Usuário está inscrito neste evento." : "Usuário não está inscrito neste evento.",
+        isSubscribed: userInscription != undefined,
+        ...userInscription
+      });
+    } catch (error) {
+      console.error("Erro ao verificar inscrição do usuário:", error);
+      return res.status(500).json({ message: "Ocorreu um erro ao processar a solicitação." });
     }
   }
 

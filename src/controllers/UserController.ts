@@ -11,6 +11,7 @@ import LoteRepository from "../repositories/LoteRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import UserRepository from "../repositories/UserRepository";
+import { sendPasswordResetEmail } from "../services/emailService";
 import {
   getPayment,
   getPaymentStatusForInscricao,
@@ -328,6 +329,75 @@ export default class UserController {
       res.status(200).json(userWithoutSensitiveData);
     } catch (error) {
       res.status(400).send(error);
+    }
+  }
+
+  static async requestPasswordReset(req: Request, res: Response){
+    try {
+      const requestPasswordResetSchema = z.object({
+        email: z.string().email("Invalid email format"),
+      });
+  
+      const { email } = requestPasswordResetSchema.parse(req.body);
+  
+      const user = await UserRepository.findUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+  
+      const token = crypto.randomUUID();
+      await UserRepository.updateUserRecoverInfo(
+        email,
+        token,
+        new Date(Date.now() + 3600000)
+      );
+  
+      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+      await sendPasswordResetEmail(email, resetUrl);
+  
+      return res.status(200).json({ message: 'E-mail de recuperação de senha enviado!' });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+  
+      return res.status(500).json({ message: "An unexpected error occurred", error: error });
+    }
+  }
+  
+  static async resetPassword(req: Request, res: Response){
+    try {
+      const resetPasswordSchema = z.object({
+        token: z.string(),
+        newPassword: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
+      });
+  
+      const { token, newPassword } = resetPasswordSchema.parse(req.body);
+  
+      const user = await UserRepository.findUserByToken(token);
+      if (!user) {
+        return res.status(400).json({ message: 'Token inválido ou expirado' });
+      }
+  
+      const hashedPassword = await encryptPassword(newPassword);
+  
+      await UserRepository.updateUserPassword(user.email, hashedPassword);
+  
+      return res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+  
+      return res.status(500).json({ message: "An unexpected error occurred", error: error });
     }
   }
 }

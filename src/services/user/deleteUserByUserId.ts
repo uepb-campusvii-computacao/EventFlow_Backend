@@ -13,7 +13,7 @@ export async function deleteUserByUserId(uuid_user: string) {
         }
     })
 
-    await prisma.usuario.delete({
+    await prisma.userEvento.deleteMany({
         where: {
             uuid_user
         }

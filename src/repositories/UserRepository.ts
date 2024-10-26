@@ -1,23 +1,23 @@
-import { Prisma } from "@prisma/client";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
 
 export default class UserRepository {
   static async createUser(
-    tx: Prisma.TransactionClient,
     {
       nome,
       nome_cracha,
+      senha,
       email,
       instituicao,
     }: {
       nome: string;
+      senha: string;
       nome_cracha: string;
       email: string;
       instituicao: string;
     }
   ) {
-    const existingUser = await tx.usuario.findUnique({
+    const existingUser = await prisma.usuario.findUnique({
       where: {
         email,
       },
@@ -29,9 +29,10 @@ export default class UserRepository {
       );
     }
 
-    return await tx.usuario.create({
+    return await prisma.usuario.create({
       data: {
         nome,
+        senha,
         nome_cracha,
         email,
         instituicao,
@@ -59,6 +60,7 @@ export default class UserRepository {
     user_uuid: string,
     atividades: RegisterParticipanteParams["atividades"]
   ) {
+    //Esses tipos de id pra minicurso, workshop e oficina não existem
     const activities_ids = [
       atividades?.minicurso_id,
       atividades?.workshop_id,
@@ -134,6 +136,40 @@ export default class UserRepository {
 
     return user;
   }
+
+  static async updateUserRecoverInfo(email : string, passwordResetToken : string, passwordResetExpires : Date){
+    return await prisma.usuario.update({
+      where: { email },
+      data: {
+          passwordResetToken,
+          passwordResetExpires
+      }
+    });
+  };
+
+  static async updateUserPassword(email : string, password : string){
+    return await prisma.usuario.update({
+      where: { email },
+      data: {
+          passwordResetToken : null,
+          passwordResetExpires: null,
+          senha: password
+      }
+    });
+  };
+  
+  static async findUserByToken(token: string) {
+    const users = await prisma.usuario.findMany({
+        where: {
+            passwordResetToken: token,
+            passwordResetExpires: {
+                gte: new Date(),
+            },
+        },
+    });
+    return users.length > 0 ? users[0] : null;
+  }
+
 
   static async findUserById(uuid_user: string) {
     const user = await prisma.usuario.findUniqueOrThrow({

@@ -1,43 +1,72 @@
-import { TipoAtividade } from "@prisma/client";
+import { Perfil, TipoAtividade } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
-import { RegisterUserRequestParams } from "../interfaces/registerUserRequestParam";
+import { z, ZodError } from "zod";
 import ActivityRepository from "../repositories/ActivityRepository";
 import EventRepository from "../repositories/EventRepository";
 import LoteRepository from "../repositories/LoteRepository";
 import OrderRepository from "../repositories/OrderRepository";
 import ProductRepository from "../repositories/ProductRepository";
+import UserEventRepository from "../repositories/UserEventRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
 
 export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
     try {
-      const {
-        nome,
-        email,
-        instituicao,
-        nome_cracha,
-        atividades,
-        lote_id,
-      }: RegisterUserRequestParams = req.body;
-
-      const user = await EventRepository.registerParticipante({
-        nome,
-        email,
-        instituicao,
-        nome_cracha,
-        atividades,
-        lote_id,
+      const registerUserInEventSchema = z.object({
+        atividades: z
+          .array(
+            z.object({
+              atividade_id: z.string(),
+            })
+          )
+          .optional(),
       });
 
-      return res.status(200).json(user);
+      const { atividades } = registerUserInEventSchema.parse(req.body);
+
+      const { lote_id } = req.params;
+
+      const uuid_user = res.locals.id;
+
+      const perfil: Perfil = "PARTICIPANTE";
+      await UserEventRepository.registerUserInEvent({
+        uuid_user,
+        lote_id,
+        perfil,
+        atividades,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Usuário cadastrado com sucesso!" });
     } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
       if (error instanceof Error) {
         return res.status(400).send(error.message);
       } else {
         return res.status(400).json(error);
       }
+    }
+  }
+
+  static async getEventInformation(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      const response = await EventRepository.findEventById(event_id);
+
+      return res.status(200).json(response);
+    } catch (error) {
+      return res.status(400).send(error);
     }
   }
 
@@ -74,7 +103,7 @@ export default class EventController {
     }
   }
 
-  static async getLotesInEvent(req: Request, res: Response) {
+  static async getLotesAtivosInEvent(req: Request, res: Response) {
     try {
       const { event_id } = req.params;
 
@@ -103,7 +132,7 @@ export default class EventController {
         oficina,
       } = req.body;
 
-      console.log(req.body)
+      console.log(req.body);
 
       const activities: { id: string; type: TipoAtividade }[] = [];
 
@@ -173,9 +202,27 @@ export default class EventController {
     }
   }
 
+  static async checkUserRegistrationInEvent(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+      const user_id = res.locals.id;
+  
+      const userInscription = await UserInscricaoRepository.findUserInscriptionByEventId(user_id, event_id);
+
+      return res.status(200).json({
+        message: userInscription ? "Usuário está inscrito neste evento." : "Usuário não está inscrito neste evento.",
+        isSubscribed: userInscription != undefined,
+        ...userInscription
+      });
+    } catch (error) {
+      console.error("Erro ao verificar inscrição do usuário:", error);
+      return res.status(500).json({ message: "Ocorreu um erro ao processar a solicitação." });
+    }
+  }
+
   static async getAllEventsByIdUser(req: Request, res: Response) {
     try {
-      const { user_id } = req.params;
+      const user_id = res.locals.id;
 
       const eventos = await UserInscricaoRepository.findAllEventsByUserId(
         user_id
@@ -189,10 +236,10 @@ export default class EventController {
 
   static async getAllSubscribersInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_subscribers =
-        await UserInscricaoRepository.projectionTableCredenciamento(id_evento);
+        await UserInscricaoRepository.projectionTableCredenciamento(event_id);
 
       if (!all_subscribers) {
         return res.status(400).send("Evento não encontrado");
@@ -207,10 +254,10 @@ export default class EventController {
 
   static async getAllFinancialInformationsInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_subscribers =
-        await UserInscricaoRepository.findAllSubscribersInEvent(id_evento);
+        await UserInscricaoRepository.findAllSubscribersInEvent(event_id);
 
       if (!all_subscribers) {
         return res.status(400).send("Evento não encontrado");
@@ -276,10 +323,10 @@ export default class EventController {
 
   static async getAllActivitiesInEvent(req: Request, res: Response) {
     try {
-      const { id_evento } = req.params;
+      const { event_id } = req.params;
 
       const all_activities = await EventRepository.findAllActivitiesInEvent(
-        id_evento
+        event_id
       );
 
       if (!all_activities) {
@@ -292,6 +339,30 @@ export default class EventController {
     }
   }
 
+  static async getAllActivitiesInEventByUser(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+      const { id } = res.locals;
+  
+      const allActivities = await EventRepository.findAllUserActivities(event_id, id);
+  
+      const activityResults: Record<string, any[]> = {};
+
+      allActivities.forEach(activity => {
+        const type = activity.tipo_atividade.toLowerCase();
+        if (!activityResults[type]) {
+          activityResults[type] = [];
+        }
+        activityResults[type].push(activity);
+      });
+  
+      return res.status(200).json(activityResults);
+    } catch (error) {
+      return res.status(400).send(error);
+    }
+  }
+  
+
   static async getAllActivitiesInEventOrdenateByTipo(
     req: Request,
     res: Response
@@ -299,24 +370,21 @@ export default class EventController {
     try {
       const { id_evento } = req.params;
 
-      const minicursos = await ActivityRepository.findActivitiesInEvent(
-        id_evento,
-        "MINICURSO"
-      );
-      const oficinas = await ActivityRepository.findActivitiesInEvent(
-        id_evento,
-        "OFICINA"
-      );
-      const workshops = await ActivityRepository.findActivitiesInEvent(
-        id_evento,
-        "WORKSHOP"
-      );
+      const activityTypes = Object.values(TipoAtividade);
 
-      return res.status(200).json({
-        minicursos,
-        oficinas,
-        workshops,
-      });
+      const activityResults = await activityTypes.reduce<
+        Promise<Record<string, any>>
+      >(async (accPromise, type) => {
+        const acc = await accPromise;
+        const activities = await ActivityRepository.findActivitiesInEvent(
+          id_evento,
+          type
+        );
+        acc[type.toLowerCase()] = activities;
+        return acc;
+      }, Promise.resolve({}));
+
+      return res.status(200).json(activityResults);
     } catch (error) {
       return res.status(400).send("Informações invalidas!");
     }
@@ -363,6 +431,47 @@ export default class EventController {
       return res
         .status(500)
         .json({ error: "Erro ao obter informações financeiras" });
+    }
+  }
+
+  static async createEvent(req: Request, res: Response) {
+    try {
+      const uuid_user = res.locals.id;
+
+      const createEventParams = z
+        .object({
+          nome: z.string(),
+          banner_img_url: z.string().optional(),
+          data: z.preprocess((arg) => {
+            if (typeof arg === "string" || arg instanceof Date)
+              return new Date(arg);
+          }, z.date().optional()),
+          conteudo: z.string(),
+        })
+        .parse(req.body);
+
+      const event = await EventRepository.createEvent({
+        uuid_user_owner: uuid_user,
+        ...createEventParams,
+      });
+
+      return res.status(200).json(event);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
     }
   }
 }

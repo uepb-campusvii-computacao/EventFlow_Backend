@@ -17,19 +17,51 @@ export default class UserInscricaoRepository {
     tx: Prisma.TransactionClient,
     user_uuid: string,
     lote_id: string,
-    payment_id: string,
-    expiration_date: string
+    payment_id?: string,
+    expiration_date?: string,
+    status_pagamento?: StatusPagamento,
   ) {
     return await tx.userInscricao.create({
       data: {
         uuid_user: user_uuid,
         uuid_lote: lote_id,
-        credenciamento: false,
-        id_payment_mercado_pago: payment_id,
-        expiration_datetime: expiration_date,
-        status_pagamento: "PENDENTE",
+        id_payment_mercado_pago: payment_id || null,
+        expiration_datetime: expiration_date || null,
+        status_pagamento: status_pagamento,
       },
     });
+  }
+
+  static async findUserInscriptionByEventId(user_id: string, event_id: string) {
+    try {
+      const lote = await prisma.lote.findFirst({
+        where: {
+          uuid_evento: event_id,
+        },
+      });
+
+      if (!lote) {
+        return null;
+      }
+
+      const userInscription = await prisma.userInscricao.findUnique({
+        where: {
+          uuid_lote_uuid_user: {
+            uuid_lote: lote.uuid_lote,
+            uuid_user: user_id,
+          },
+        },
+        include: {
+          usuario: true,
+          lote: true,
+        },
+      });
+
+      return userInscription;
+    } catch (error) {
+      console.error("Erro ao buscar inscrição do usuário:", error);
+      throw error;
+    }
   }
 
   static async findLoteIdAndUserIdByEmail(event_id: string, email: string) {
@@ -198,14 +230,20 @@ export default class UserInscricaoRepository {
     try {
       const eventos = await prisma.evento.findMany({
         where: {
-          uuid_user_owner: uuid_user,
+          UserEvento: {
+            every: {
+              uuid_user
+            }
+          }
         },
         select: {
           uuid_evento: true,
           nome: true,
-          date: true
+          date: true,
         },
       });
+
+      console.log("teste")
 
       return eventos;
     } catch (error) {

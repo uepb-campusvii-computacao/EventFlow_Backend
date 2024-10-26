@@ -231,7 +231,7 @@ export default class UserInscricaoRepository {
       const eventos = await prisma.evento.findMany({
         where: {
           UserEvento: {
-            every: {
+            some: {
               uuid_user
             }
           }

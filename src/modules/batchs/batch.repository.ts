@@ -16,7 +16,7 @@ export default class BatchRepository {
     return batch;
   }
 
-  static async getLotesAtivosByEventID(id_evento: string) {
+  static async getBatchActiveByEventID(id_evento: string) {
     const lotes = await prisma.batch.findMany({
       where: {
         eventId: id_evento,

@@ -78,7 +78,7 @@ export default class EventController {
     try {
       const { event_id } = req.params;
 
-      const lotes_in_event = await BatchRepository.getLotesAtivosByEventID(
+      const lotes_in_event = await BatchRepository.getBatchActiveByEventID(
         event_id
       );
 

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import BatchRepository from "./batch.repository";
 
 export default class BatchService {
-  public async toggleBatchActiveStatus(req: Request, res: Response) {
+  static async toggleBatchActiveStatus(req: Request, res: Response) {
     try {
       const { lote_id } = req.params;
 

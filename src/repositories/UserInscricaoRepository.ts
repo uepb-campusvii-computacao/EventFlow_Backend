@@ -4,7 +4,7 @@ import {
   TipoAtividade,
   Usuario,
 } from "@prisma/client";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 import UserAtividadeRepository from "./UserAtividadeRepository";
 
 export interface ActivityUpdate {
@@ -34,9 +34,9 @@ export default class UserInscricaoRepository {
 
   static async findUserInscriptionByEventId(user_id: string, event_id: string) {
     try {
-      const lote = await prisma.lote.findFirst({
+      const lote = await prisma.batch.findFirst({
         where: {
-          uuid_evento: event_id,
+          eventId: event_id,
         },
       });
 
@@ -47,7 +47,7 @@ export default class UserInscricaoRepository {
       const userInscription = await prisma.userInscricao.findUnique({
         where: {
           uuid_lote_uuid_user: {
-            uuid_lote: lote.uuid_lote,
+            uuid_lote: lote.id,
             uuid_user: user_id,
           },
         },
@@ -68,7 +68,7 @@ export default class UserInscricaoRepository {
     const user = await prisma.userInscricao.findFirst({
       where: {
         lote: {
-          uuid_evento: event_id
+          eventId: event_id
         },
         AND: {
           usuario: {
@@ -97,7 +97,7 @@ export default class UserInscricaoRepository {
     const user_inscricao = await prisma.userInscricao.findFirstOrThrow({
       where: {
         lote: {
-          uuid_evento,
+          eventId: uuid_evento,
         },
         AND: {
           uuid_user
@@ -206,7 +206,7 @@ export default class UserInscricaoRepository {
     const all_subscribers = await prisma.userInscricao.findMany({
       where: {
         lote: {
-          uuid_evento: event_id,
+          eventId: event_id,
         },
       },
       select: {
@@ -336,12 +336,12 @@ export default class UserInscricaoRepository {
     const users = await prisma.userInscricao.findMany({
       where: {
         uuid_lote: {
-          in: await prisma.lote
+          in: await prisma.batch
             .findMany({
-              where: { uuid_evento: event_id },
-              select: { uuid_lote: true },
+              where: { eventId: event_id },
+              select: { id: true },
             })
-            .then((lotes) => lotes.map((lote) => lote.uuid_lote)),
+            .then((lotes) => lotes.map((lote) => lote.id)),
         },
       },
       select: {
@@ -379,7 +379,7 @@ export default class UserInscricaoRepository {
     return await prisma.userInscricao.findMany({
       where: {
         lote: {
-          evento: {
+          event: {
             uuid_evento: event_id,
           },
         },
@@ -397,7 +397,7 @@ export default class UserInscricaoRepository {
     const users = await prisma.userInscricao.findMany({
       where: {
         lote: {
-          evento: {
+          event: {
             uuid_evento,
           },
         },

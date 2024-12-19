@@ -6,8 +6,8 @@ import { UpdatePaymentStatusParams } from "../interfaces/updatePaymentStatusPara
 import { UserLoginParams } from "../interfaces/userLoginParams";
 
 import { z, ZodError } from "zod";
-import { prisma } from "../lib/prisma";
-import LoteRepository from "../repositories/LoteRepository";
+import BatchRepository from "../modules/batchs/batch.repository";
+import { prisma } from "../plugins/prisma";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import UserRepository from "../repositories/UserRepository";
@@ -157,15 +157,16 @@ export default class UserController {
 
   static async getUserInformation(req: Request, res: Response) {
     try {
+       
       const { user_id, lote_id } = req.params;
 
-      const atividades = await UserAtividadeRepository.findActivitiesByUserId(
+      const atividades: any = await UserAtividadeRepository.findActivitiesByUserId(
         user_id
       );
       const user = await UserRepository.findUserById(user_id);
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
-      const lote = await LoteRepository.findLoteById(lote_id);
+      const lote = await BatchRepository.findBatchById(lote_id);
 
       const response = {
         user_name: user.nome,
@@ -174,11 +175,11 @@ export default class UserController {
         instituicao: user.instituicao,
         inscricao: {
           status: user_inscricao?.status_pagamento,
-          nome_lote: lote.nome,
-          preco: lote.preco,
-          uuid_evento: lote.uuid_evento,
+          nome_lote: lote.name,
+          preco: lote.price,
+          uuid_evento: lote.eventId,
         },
-        atividades: atividades.map((atividade) => ({
+        atividades: atividades.map((atividade: any) => ({
           nome: atividade.nome,
           tipo_atividade: atividade.tipo_atividade,
           uuid_atividade: atividade.uuid_atividade,

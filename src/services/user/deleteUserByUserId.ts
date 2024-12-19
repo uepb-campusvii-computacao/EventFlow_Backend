@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../plugins/prisma";
 
 export async function deleteUserByUserId(uuid_user: string) {
     await prisma.userAtividade.deleteMany({

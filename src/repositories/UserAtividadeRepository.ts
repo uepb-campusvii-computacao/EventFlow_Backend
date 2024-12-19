@@ -1,6 +1,6 @@
 import { Prisma, TipoAtividade } from "@prisma/client";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 import ActivityRepository from "./ActivityRepository";
 
 export default class UserAtividadeRepository {

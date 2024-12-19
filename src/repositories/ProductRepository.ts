@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 
 export default class ProductRepository {
   static async findAllProductsByEventId(uuid_evento: string) {

@@ -1,5 +1,5 @@
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 
 export default class UserRepository {
   static async createUser(

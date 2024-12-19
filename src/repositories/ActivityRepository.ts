@@ -1,5 +1,5 @@
 import { TipoAtividade } from "@prisma/client";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 
 export default class ActivityRepository {
   static async findActivityById(uuid_atividade: string) {

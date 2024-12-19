@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
-import { prisma } from "../lib/prisma";
+import BatchRepository from "../modules/batchs/batch.repository";
+import { prisma } from "../plugins/prisma";
 import { createPaymentUserResgistration } from "../services/payments/createPaymentUserRegistration";
-import LoteRepository from "./LoteRepository";
 import UserAtividadeRepository from "./UserAtividadeRepository";
 import UserInscricaoRepository from "./UserInscricaoRepository";
 
@@ -20,9 +20,9 @@ export default class EventRepository {
       atividades: RegisterParticipanteParams["atividades"];
     }
   ) {
-    const lote = await LoteRepository.findLoteById(lote_id);
+    const lote = await BatchRepository.findBatchById(lote_id);
 
-    if (lote.preco > 0) {
+    if (lote.price > 0) {
       const { payment_id, expiration_date } =
         await createPaymentUserResgistration(tx, user_id, lote_id);
 
@@ -85,9 +85,9 @@ export default class EventRepository {
         uuid_user,
         AND: {
           atividade: {
-            uuid_evento
-          }
-        }
+            uuid_evento,
+          },
+        },
       },
       select: {
         atividade: {
@@ -120,7 +120,7 @@ export default class EventRepository {
       select: {
         lote: {
           select: {
-            preco: true,
+            price: true,
           },
         },
       },
@@ -143,7 +143,7 @@ export default class EventRepository {
       where: {
         credenciamento: true,
         lote: {
-          evento: {
+          event: {
             uuid_evento: idEvento,
           },
         },
@@ -177,11 +177,11 @@ export default class EventRepository {
         nome: true,
         lote: {
           select: {
-            ativo: true,
-            descricao: true,
-            uuid_lote: true,
-            nome: true,
-            preco: true,
+            isActive: true,
+            description: true,
+            id: true,
+            name: true,
+            price: true,
           },
         },
         uuid_evento: true,

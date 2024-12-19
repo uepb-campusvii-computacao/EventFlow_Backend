@@ -30,6 +30,7 @@ export default class ActivityController {
     try {
       const { atividade_id, user_id } = req.params;
 
+
       const activity = await UserAtividadeRepository.findUserAtividadeById(
         atividade_id,
         user_id

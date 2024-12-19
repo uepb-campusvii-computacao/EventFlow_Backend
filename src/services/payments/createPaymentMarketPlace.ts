@@ -1,8 +1,8 @@
-import { addDays, format } from "date-fns";
-import { payment } from "../../lib/mercado_pago";
-import { CreateOrderParams } from "../../interfaces/createOrderParams";
-import { prisma } from "../../lib/prisma";
 import { Prisma } from "@prisma/client";
+import { addDays, format } from "date-fns";
+import { CreateOrderParams } from "../../interfaces/createOrderParams";
+import { payment } from "../../plugins/mercado_pago";
+import { prisma } from "../../plugins/prisma";
 
 export async function createPaymentMarketPlace({
   email,

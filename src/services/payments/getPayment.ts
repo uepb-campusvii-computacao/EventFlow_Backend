@@ -1,5 +1,5 @@
 import { StatusPagamento } from "@prisma/client";
-import { payment } from "../../lib/mercado_pago";
+import { payment } from "../../plugins/mercado_pago";
 import OrderRepository from "../../repositories/OrderRepository";
 import UserInscricaoRepository from "../../repositories/UserInscricaoRepository";
 const statusPagamentoHash: { [key: string]: StatusPagamento } = {

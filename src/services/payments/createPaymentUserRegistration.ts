@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { addDays, format } from "date-fns";
-import { payment } from "../../lib/mercado_pago";
+import { payment } from "../../plugins/mercado_pago";
 
 export async function createPaymentUserResgistration(
   tx: Prisma.TransactionClient,

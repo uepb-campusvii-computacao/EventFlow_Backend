@@ -15,21 +15,21 @@ datasource db {
 }
 
 model Usuario {
-  uuid_user     String          @id @default(uuid())
-  nome          String
-  nome_cracha   String
-  instituicao   String
-  email         String          @unique
-  senha         String?
-  active        Boolean         @default(true)
-  passwordResetToken  String?
+  uuid_user            String          @id @default(uuid())
+  nome                 String
+  nome_cracha          String
+  instituicao          String
+  email                String          @unique
+  senha                String?
+  active               Boolean         @default(true)
+  passwordResetToken   String?
   passwordResetExpires DateTime?
-  evento        Evento[]
-  userAtividade UserAtividade[]
-  userInscricao UserInscricao[]
-  Pagamento     Pagamento[]
-  Venda         Venda[]
-  UserEvento    UserEvento[]
+  evento               Evento[]
+  userAtividade        UserAtividade[]
+  userInscricao        UserInscricao[]
+  Pagamento            Pagamento[]
+  Venda                Venda[]
+  UserEvento           UserEvento[]
 
   @@map("tb_usuario")
 }
@@ -40,9 +40,9 @@ model Evento {
   nome            String       @unique
   banner_img_url  String?      @db.LongText
   date            DateTime?
-  conteudo         String       @db.LongText
+  conteudo        String       @db.LongText
   usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
-  lote            Lote[]
+  lote            Batch[]
   atividade       Atividade[]
   Produto         Produto[]
   UserEvento      UserEvento[]
@@ -50,17 +50,17 @@ model Evento {
   @@map("tb_evento")
 }
 
-model Lote {
-  uuid_lote     String          @id @default(uuid())
-  uuid_evento   String
-  preco         Float
-  nome          String
-  descricao     String?
-  ativo         Boolean         @default(true)
-  evento        Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
-  userInscricao UserInscricao[]
+model Batch {
+  id               String          @id @default(uuid())
+  eventId          String
+  price            Float
+  name             String
+  description      String?
+  isActive         Boolean         @default(true)
+  event            Evento          @relation(fields: [eventId], references: [uuid_evento])
+  userRegistration UserInscricao[]
 
-  @@map("tb_lote")
+  @@map("tb_batch")
 }
 
 model Atividade {
@@ -108,7 +108,7 @@ model UserInscricao {
   expiration_datetime     DateTime?
   status_pagamento        StatusPagamento @default(PENDENTE)
   usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
-  lote                    Lote            @relation(fields: [uuid_lote], references: [uuid_lote])
+  lote                    Batch           @relation(fields: [uuid_lote], references: [id])
 
   @@id([uuid_lote, uuid_user])
   @@map("tb_usuario_inscricao")

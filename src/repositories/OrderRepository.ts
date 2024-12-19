@@ -1,5 +1,5 @@
 import { StatusPagamento } from "@prisma/client";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 
 export default class OrderRepository {
   static async findAllVendasByUserId(uuid_user: string) {

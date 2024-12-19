@@ -1,29 +1,29 @@
 import { Perfil } from "@prisma/client";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../plugins/prisma";
 import EventRepository from "./EventRepository";
 
 export default class UserEventRepository {
   static async registerUserInEvent({
     uuid_user,
-    lote_id,
+    batchId,
     perfil,
     atividades,
   }: {
     uuid_user: string;
-    perfil: Perfil;
+    perfil?: Perfil;
     atividades?: {
       atividade_id: string;
     }[];
-    lote_id: string;
+    batchId: string;
   }) {
     return prisma.$transaction(async (tx) => {
-      const existingLote = await tx.lote.findFirst({
+      const existingBatch = await tx.batch.findFirst({
         where: {
-          uuid_lote: lote_id,
+          id: batchId,
         },
       });
 
-      if (!existingLote) {
+      if (!existingBatch) {
         throw new Error("Lote não encontrado!");
       }
 
@@ -31,7 +31,7 @@ export default class UserEventRepository {
         where: {
           uuid_user_uuid_evento: {
             uuid_user,
-            uuid_evento: existingLote?.uuid_evento,
+            uuid_evento: existingBatch?.id,
           },
         },
       });
@@ -40,17 +40,19 @@ export default class UserEventRepository {
         throw new Error("Usuário já participa deste evento");
       }
 
+      const userPerfil = perfil ?? Perfil.PARTICIPANTE;
+
       await tx.userEvento.create({
         data: {
           uuid_user,
-          uuid_evento: existingLote.uuid_evento,
-          perfil: perfil || Perfil.PARTICIPANTE,
+          uuid_evento: existingBatch.eventId,
+          perfil: userPerfil,
         },
       });
 
       await EventRepository.registerParticipante(tx, {
         user_id: uuid_user,
-        lote_id,
+        lote_id: batchId,
         atividades,
       });
     });

@@ -1,10 +1,11 @@
-import { Perfil, TipoAtividade } from "@prisma/client";
+import { TipoAtividade } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import { z, ZodError } from "zod";
+import BatchRepository from "../modules/batchs/batch.repository";
+import { registerUserInEventSchema } from "../modules/batchs/schemas/register.schema";
 import ActivityRepository from "../repositories/ActivityRepository";
 import EventRepository from "../repositories/EventRepository";
-import LoteRepository from "../repositories/LoteRepository";
 import OrderRepository from "../repositories/OrderRepository";
 import ProductRepository from "../repositories/ProductRepository";
 import UserEventRepository from "../repositories/UserEventRepository";
@@ -13,28 +14,17 @@ import { getPayment } from "../services/payments/getPayment";
 
 export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
+    
     try {
-      const registerUserInEventSchema = z.object({
-        atividades: z
-          .array(
-            z.object({
-              atividade_id: z.string(),
-            })
-          )
-          .optional(),
-      });
-
       const { atividades } = registerUserInEventSchema.parse(req.body);
 
       const { lote_id } = req.params;
 
       const uuid_user = res.locals.id;
 
-      const perfil: Perfil = "PARTICIPANTE";
       await UserEventRepository.registerUserInEvent({
         uuid_user,
-        lote_id,
-        perfil,
+        batchId: lote_id,
         atividades,
       });
 
@@ -70,30 +60,11 @@ export default class EventController {
     }
   }
 
-  static async toggleLoteAtivo(req: Request, res: Response) {
-    try {
-      const { lote_id } = req.params;
-
-      await LoteRepository.toggleLoteAtivo(lote_id);
-
-      return res.status(200).send("Campo ativo do lote alternado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao alternar o campo ativo do lote:", error);
-
-      let errorMessage = "Erro ao alternar o campo ativo do lote.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      return res.status(400).json({ message: errorMessage });
-    }
-  }
-
   static async getAllLotesInEvent(req: Request, res: Response) {
     try {
       const { event_id } = req.params;
 
-      const lotes_in_event = await LoteRepository.getAllLotesByEventID(
+      const lotes_in_event = await BatchRepository.getAllBatchsByEventID(
         event_id
       );
 
@@ -107,7 +78,7 @@ export default class EventController {
     try {
       const { event_id } = req.params;
 
-      const lotes_in_event = await LoteRepository.getLotesAtivosByEventID(
+      const lotes_in_event = await BatchRepository.getLotesAtivosByEventID(
         event_id
       );
 
@@ -206,17 +177,25 @@ export default class EventController {
     try {
       const { event_id } = req.params;
       const user_id = res.locals.id;
-  
-      const userInscription = await UserInscricaoRepository.findUserInscriptionByEventId(user_id, event_id);
+
+      const userInscription =
+        await UserInscricaoRepository.findUserInscriptionByEventId(
+          user_id,
+          event_id
+        );
 
       return res.status(200).json({
-        message: userInscription ? "Usuário está inscrito neste evento." : "Usuário não está inscrito neste evento.",
+        message: userInscription
+          ? "Usuário está inscrito neste evento."
+          : "Usuário não está inscrito neste evento.",
         isSubscribed: userInscription != undefined,
-        ...userInscription
+        ...userInscription,
       });
     } catch (error) {
       console.error("Erro ao verificar inscrição do usuário:", error);
-      return res.status(500).json({ message: "Ocorreu um erro ao processar a solicitação." });
+      return res
+        .status(500)
+        .json({ message: "Ocorreu um erro ao processar a solicitação." });
     }
   }
 
@@ -343,25 +322,27 @@ export default class EventController {
     try {
       const { event_id } = req.params;
       const { id } = res.locals;
-  
-      const allActivities = await EventRepository.findAllUserActivities(event_id, id);
-  
+
+      const allActivities = await EventRepository.findAllUserActivities(
+        event_id,
+        id
+      );
+
       const activityResults: Record<string, any[]> = {};
 
-      allActivities.forEach(activity => {
+      allActivities.forEach((activity) => {
         const type = activity.tipo_atividade.toLowerCase();
         if (!activityResults[type]) {
           activityResults[type] = [];
         }
         activityResults[type].push(activity);
       });
-  
+
       return res.status(200).json(activityResults);
     } catch (error) {
       return res.status(400).send(error);
     }
   }
-  
 
   static async getAllActivitiesInEventOrdenateByTipo(
     req: Request,
@@ -415,7 +396,7 @@ export default class EventController {
       );
 
       const totalArrecadadoInscricoes = usersWithPaymentStatusRealizado.reduce(
-        (total, curr) => total + curr.lote.preco,
+        (total, curr) => total + curr.lote.price,
         0
       );
 

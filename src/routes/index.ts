@@ -1,9 +1,9 @@
 import express from "express";
+import BatchPrivateRoutes from "../modules/batchs/batch.private.routes";
+import BatchPublicRoutes from "../modules/batchs/batch.public.routes";
 import ActivityPrivateRoutes from "./private/ActivityPrivateRoutes";
-import BatchPrivateRoutes from "./private/BatchPrivateRoutes";
 import EventPrivateRoutes from "./private/EventPrivateRoutes";
 import UserPrivateRoutes from "./private/UserPrivateRoutes";
-import BatchPublicRoutes from "./public/BatchPublicRoutes";
 import EventPublicRoutes from "./public/EventPublicRoutes";
 import UserPublicRoutes from "./public/UserPublicRoutes";
 

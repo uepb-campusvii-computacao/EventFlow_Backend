@@ -1,9 +1,8 @@
 import cors from "cors";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
-import SwaggerDocs from "../src/swagger.json";
-import { checkToken } from "./middlewares/ensureAuthenticate";
+import { swaggerDocs } from "./docs/swagger";
 import router from "./routes";
 dotenv.config();
 
@@ -11,25 +10,22 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/doc-api",checkToken, swaggerUi.serve, swaggerUi.setup(SwaggerDocs))
+const FRONTEND_URL = process.env.FRONTEND_URL || "";
+const GERENCIADOR_URL = process.env.GERENCIADOR_URL || "";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || ""
-const GERENCIADOR_URL = process.env.GERENCIADOR_URL || ""
-
-
-app.use(cors({
+app.use(
+  cors({
     origin: [FRONTEND_URL, GERENCIADOR_URL],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, 
-}));
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //app.use(routes);
-app.use(router)
+app.use(router);
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000;
 
-
-app.listen(PORT, () => (
-    console.log("Http server running! on port " + PORT)
-));
-
+app.listen(PORT, () => console.log("Http server running! on port " + PORT));

@@ -43,7 +43,7 @@ model Evento {
   conteudo        String       @db.LongText
   usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
   lote            Batch[]
-  atividade       Atividade[]
+  atividade       Activity[]
   Produto         Produto[]
   UserEvento      UserEvento[]
 
@@ -63,18 +63,19 @@ model Batch {
   @@map("tb_batch")
 }
 
-model Atividade {
-  uuid_atividade   String          @id @default(uuid())
-  uuid_evento      String
-  date             DateTime?
-  nome             String
-  descricao        String?         @db.Text
-  max_participants Int?
-  tipo_atividade   TipoAtividade   @default(MINICURSO)
-  evento           Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
-  userAtividade    UserAtividade[]
+model Activity {
+  id                    String          @id @default(uuid())
+  eventId               String
+  date                  DateTime?
+  name                  String
+  description           String?         @db.Text
+  maxParticipants       Int?
+  activityType          TipoAtividade   @default(MINICURSO)
+  numberOfRegistrations Int             @default(0)
+  event                 Evento          @relation(fields: [eventId], references: [uuid_evento])
+  userActivities        UserAtividade[]
 
-  @@map("tb_atividade")
+  @@map("tb_activity")
 }
 
 model UserEvento {
@@ -92,9 +93,9 @@ model UserEvento {
 model UserAtividade {
   uuid_user      String
   uuid_atividade String
-  presenca       Boolean   @default(false)
-  user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
-  atividade      Atividade @relation(fields: [uuid_atividade], references: [uuid_atividade])
+  presenca       Boolean  @default(false)
+  user           Usuario  @relation(fields: [uuid_user], references: [uuid_user])
+  atividade      Activity @relation(fields: [uuid_atividade], references: [id])
 
   @@id([uuid_user, uuid_atividade])
   @@map("tb_usuario_atividade")

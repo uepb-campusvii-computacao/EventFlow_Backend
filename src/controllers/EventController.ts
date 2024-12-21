@@ -2,9 +2,9 @@ import { TipoAtividade } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import { z, ZodError } from "zod";
+import ActivityRepository from "../modules/activities/activity.repository";
 import BatchRepository from "../modules/batchs/batch.repository";
 import { registerUserInEventSchema } from "../modules/batchs/schemas/register.schema";
-import ActivityRepository from "../repositories/ActivityRepository";
 import EventRepository from "../repositories/EventRepository";
 import OrderRepository from "../repositories/OrderRepository";
 import ProductRepository from "../repositories/ProductRepository";
@@ -14,7 +14,6 @@ import { getPayment } from "../services/payments/getPayment";
 
 export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
-    
     try {
       const { atividades } = registerUserInEventSchema.parse(req.body);
 
@@ -312,7 +311,7 @@ export default class EventController {
         return res.status(400).send("Evento não encontrado");
       }
 
-      return res.status(200).json(all_activities.atividade);
+      return res.status(200).json(all_activities);
     } catch (error) {
       return res.status(400).send(error);
     }
@@ -331,7 +330,7 @@ export default class EventController {
       const activityResults: Record<string, any[]> = {};
 
       allActivities.forEach((activity) => {
-        const type = activity.tipo_atividade.toLowerCase();
+        const type = activity.activityType.toLowerCase();
         if (!activityResults[type]) {
           activityResults[type] = [];
         }
@@ -357,7 +356,7 @@ export default class EventController {
         Promise<Record<string, any>>
       >(async (accPromise, type) => {
         const acc = await accPromise;
-        const activities = await ActivityRepository.findActivitiesInEvent(
+        const activities = await ActivityRepository.findActivitiesInEventByType(
           id_evento,
           type
         );

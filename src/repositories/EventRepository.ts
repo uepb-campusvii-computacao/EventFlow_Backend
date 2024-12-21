@@ -59,18 +59,14 @@ export default class EventRepository {
       select: {
         atividade: {
           select: {
-            uuid_atividade: true,
-            nome: true,
-            max_participants: true,
-            tipo_atividade: true,
-            _count: {
-              select: {
-                userAtividade: true,
-              },
-            },
+            id: true,
+            name: true,
+            maxParticipants: true,
+            activityType: true,
+            numberOfRegistrations: true,
           },
           orderBy: {
-            nome: "asc",
+            name: "asc",
           },
         },
       },
@@ -85,22 +81,18 @@ export default class EventRepository {
         uuid_user,
         AND: {
           atividade: {
-            uuid_evento,
+            eventId: uuid_evento,
           },
         },
       },
       select: {
         atividade: {
           select: {
-            uuid_atividade: true,
-            nome: true,
-            max_participants: true,
-            tipo_atividade: true,
-            _count: {
-              select: {
-                userAtividade: true,
-              },
-            },
+            id: true,
+            name: true,
+            maxParticipants: true,
+            activityType: true,
+            numberOfRegistrations: true,
           },
         },
       },
@@ -108,7 +100,6 @@ export default class EventRepository {
 
     return activities.map((activity) => ({
       ...activity.atividade,
-      _count: activity.atividade._count.userAtividade,
     }));
   }
 

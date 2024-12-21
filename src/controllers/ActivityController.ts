@@ -1,9 +1,9 @@
-import { TipoAtividade } from "@prisma/client";
 import { Request, Response } from "express";
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
-import { UpdateActivityParams } from "../interfaces/updateActivityParams";
-import { default as ActivityRepository } from "../repositories/ActivityRepository";
+import ActivityRepository from "../modules/activities/activity.repository";
+import { createActivitySchema } from "../modules/activities/schemas/createActivity.schema";
+import { updateActivitySchema } from "../modules/activities/schemas/updateActivity.schema";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 
 export default class ActivityController {
@@ -17,19 +17,12 @@ export default class ActivityController {
       return res.status(400).send("Atividade não encontrada");
     }
 
-    return res.status(200).json(
-      subscribers.map((subscriber) => ({
-        uuid_user: subscriber.uuid_user,
-        presenca: subscriber.presenca,
-        ...subscriber.user,
-      }))
-    );
+    return res.status(200).json(subscribers);
   }
 
   static async changeActivityPresencaValue(req: Request, res: Response) {
     try {
       const { atividade_id, user_id } = req.params;
-
 
       const activity = await UserAtividadeRepository.findUserAtividadeById(
         atividade_id,
@@ -56,7 +49,7 @@ export default class ActivityController {
         atividade_id
       );
 
-      return res.status(200).json({ ...activity });
+      return res.status(200).json(activity);
     } catch (error) {
       return res.status(400).send(error);
     }
@@ -78,7 +71,7 @@ export default class ActivityController {
         throw new Error("UUID inválido!");
       }
 
-      let max_participants = Number(activity_exists.max_participants);
+      let max_participants = Number(activity_exists.maxParticipants);
 
       let total_participants = (
         await UserAtividadeRepository.findAllSubscribersInActivity(
@@ -87,7 +80,7 @@ export default class ActivityController {
       ).length;
 
       if (total_participants >= max_participants) {
-        throw new Error(`A atividade ${activity_exists.nome} já está completa`);
+        throw new Error(`A atividade ${activity_exists.name} já está completa`);
       }
 
       if (uuid_atividade_atual == "") {
@@ -113,20 +106,9 @@ export default class ActivityController {
     try {
       const { atividade_id } = req.params;
 
-      const {
-        nome,
-        descricao,
-        tipo_atividade,
-        max_participants,
-      }: UpdateActivityParams = req.body;
+      const body = updateActivitySchema.parse(req.body);
 
-      const activity = await ActivityRepository.updateActivityById(
-        atividade_id,
-        nome,
-        descricao,
-        tipo_atividade,
-        Number(max_participants)
-      );
+      const activity = await ActivityRepository.updateActivityById(atividade_id, body);
 
       if (!activity) {
         throw new Error("Falha ao atualizar atividade");
@@ -144,23 +126,9 @@ export default class ActivityController {
 
       const uuid_evento = req.params.event_id;
 
-      const createActivityParams = z
-        .object({
-          nome: z.string(),
-          max_participants: z.number().optional(),
-          data: z.preprocess((arg) => {
-            if (typeof arg === "string" || arg instanceof Date)
-              return new Date(arg);
-          }, z.date().optional()),
-          descricao: z.string(),
-          tipo_atividade: z.nativeEnum(TipoAtividade),
-        })
-        .parse(req.body);
+      const createActivityParams = createActivitySchema.parse(req.body);
 
-      const activity = await ActivityRepository.createActivity({
-        uuid_evento,
-        ...createActivityParams,
-      });
+      const activity = await ActivityRepository.createActivity(createActivityParams);
 
       return res.status(200).json(activity);
     } catch (error) {

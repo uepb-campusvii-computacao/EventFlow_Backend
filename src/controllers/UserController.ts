@@ -7,6 +7,7 @@ import { UserLoginParams } from "../interfaces/userLoginParams";
 
 import { z, ZodError } from "zod";
 import BatchRepository from "../modules/batchs/batch.repository";
+import { updatePaymentStatusDto } from "../modules/batchs/schemas/updatePayment.schema";
 import { prisma } from "../plugins/prisma";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
@@ -129,7 +130,7 @@ export default class UserController {
   static async realizarPagamento(req: Request, res: Response) {
     try {
       const { lote_id, user_id } = req.params;
-      const { action } = req.body;
+      const { action } = updatePaymentStatusDto.parse(req.body);
 
       if (action === "payment.updated") {
         const [status, user_inscricao] = await Promise.all([
@@ -157,12 +158,10 @@ export default class UserController {
 
   static async getUserInformation(req: Request, res: Response) {
     try {
-       
       const { user_id, lote_id } = req.params;
 
-      const atividades: any = await UserAtividadeRepository.findActivitiesByUserId(
-        user_id
-      );
+      const atividades: any =
+        await UserAtividadeRepository.findActivitiesByUserId(user_id);
       const user = await UserRepository.findUserById(user_id);
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
@@ -323,40 +322,42 @@ export default class UserController {
     try {
       const { id } = res.locals;
 
-      const user = await UserRepository.findUserById(id)
+      const user = await UserRepository.findUserById(id);
 
       const { uuid_user: _, senha, ...userWithoutSensitiveData } = user;
-  
+
       res.status(200).json(userWithoutSensitiveData);
     } catch (error) {
       res.status(400).send(error);
     }
   }
 
-  static async requestPasswordReset(req: Request, res: Response){
+  static async requestPasswordReset(req: Request, res: Response) {
     try {
       const requestPasswordResetSchema = z.object({
         email: z.string().email("Invalid email format"),
       });
-  
+
       const { email } = requestPasswordResetSchema.parse(req.body);
-  
+
       const user = await UserRepository.findUserByEmail(email);
       if (!user) {
-        return res.status(404).json({ message: 'Usuário não encontrado' });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
-  
+
       const token = crypto.randomUUID();
       await UserRepository.updateUserRecoverInfo(
         email,
         token,
         new Date(Date.now() + 3600000)
       );
-  
+
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
       await sendPasswordResetEmail(email, resetUrl);
-  
-      return res.status(200).json({ message: 'E-mail de recuperação de senha enviado!' });
+
+      return res
+        .status(200)
+        .json({ message: "E-mail de recuperação de senha enviado!" });
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -365,30 +366,34 @@ export default class UserController {
         }));
         return res.status(400).json(formattedErrors);
       }
-  
-      return res.status(500).json({ message: "An unexpected error occurred", error: error });
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
     }
   }
-  
-  static async resetPassword(req: Request, res: Response){
+
+  static async resetPassword(req: Request, res: Response) {
     try {
       const resetPasswordSchema = z.object({
         token: z.string(),
-        newPassword: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
+        newPassword: z
+          .string()
+          .min(8, "A senha precisa ter pelo menos 8 caracteres"),
       });
-  
+
       const { token, newPassword } = resetPasswordSchema.parse(req.body);
-  
+
       const user = await UserRepository.findUserByToken(token);
       if (!user) {
-        return res.status(400).json({ message: 'Token inválido ou expirado' });
+        return res.status(400).json({ message: "Token inválido ou expirado" });
       }
-  
+
       const hashedPassword = await encryptPassword(newPassword);
-  
+
       await UserRepository.updateUserPassword(user.email, hashedPassword);
-  
-      return res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+
+      return res.status(200).json({ message: "Senha redefinida com sucesso!" });
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -397,8 +402,10 @@ export default class UserController {
         }));
         return res.status(400).json(formattedErrors);
       }
-  
-      return res.status(500).json({ message: "An unexpected error occurred", error: error });
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
     }
   }
 }

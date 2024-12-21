@@ -1,7 +1,8 @@
 import { Prisma, TipoAtividade } from "@prisma/client";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
+import ActivityRepository from "../modules/activities/activity.repository";
+import { SubscribersInActivityDto } from "../modules/activities/schemas/subscribersInActivity.schema";
 import { prisma } from "../plugins/prisma";
-import ActivityRepository from "./ActivityRepository";
 
 export default class UserAtividadeRepository {
   static async createUserAtividade(uuid_user: string, uuid_atividade: string) {
@@ -20,46 +21,42 @@ export default class UserAtividadeRepository {
   ) {
     for (const item of atividades || []) {
       try {
-        console.log(item.atividade_id);
-        
-        // Verifica se a atividade existe
-        const activity = await tx.atividade.findUnique({
-          where: {
-            uuid_atividade: item.atividade_id,
-          },
-        });
-  
+        const activity = await ActivityRepository.findActivityById(
+          item.atividade_id
+        );
+
         if (!activity) {
           throw new Error("Atividade não encontrada");
         }
-  
-        // Conta o número de participantes
-        const count = await tx.userAtividade.count({
-          where: {
-            uuid_atividade: item.atividade_id,
-          },
-        });
-  
-        // Verifica se a atividade está cheia
-        if (activity.max_participants && count >= activity.max_participants) {
-          throw new Error(`A atividade ${activity.nome} está cheia`);
+
+        if (
+          activity.maxParticipants &&
+          activity.numberOfRegistrations >= activity.maxParticipants
+        ) {
+          throw new Error(`A atividade ${activity.name} está cheia`);
         }
-  
-        // Registra o usuário na atividade
+
         await tx.userAtividade.create({
           data: {
             uuid_user: user_uuid,
             uuid_atividade: item.atividade_id,
           },
         });
-  
+
+        await tx.activity.update({
+          where: {
+            id: activity.id,
+          },
+          data: {
+            numberOfRegistrations: activity.numberOfRegistrations + 1,
+          },
+        });
       } catch (error) {
         console.error(`Erro ao registrar na atividade ${item.atividade_id}`);
-        throw error; // Lança o erro novamente para quem chamou a função
+        throw error;
       }
     }
   }
-  
 
   static async changeUserAtividade(
     uuid_atividade_atual: string,
@@ -87,16 +84,16 @@ export default class UserAtividadeRepository {
       select: {
         atividade: {
           select: {
-            uuid_atividade: true,
-            nome: true,
-            tipo_atividade: true,
+            id: true,
+            name: true,
+            activityType: true,
           },
         },
         presenca: true,
       },
       orderBy: {
         atividade: {
-          tipo_atividade: "asc",
+          activityType: "asc",
         },
       },
     });
@@ -173,7 +170,9 @@ export default class UserAtividadeRepository {
     return subscribers;
   }
 
-  static async findAllSubscribersInActivity(uuid_atividade: string) {
+  static async findAllSubscribersInActivity(
+    uuid_atividade: string
+  ): Promise<SubscribersInActivityDto> {
     const subscribers = await prisma.userAtividade.findMany({
       where: {
         uuid_atividade,
@@ -205,7 +204,11 @@ export default class UserAtividadeRepository {
       },
     });
 
-    return subscribers;
+    return subscribers.map((subscriber) => ({
+      uuid_user: subscriber.uuid_user,
+      presenca: subscriber.presenca,
+      ...subscriber.user,
+    }));
   }
 
   static async deleteAllActivityByUserAndType(
@@ -216,7 +219,7 @@ export default class UserAtividadeRepository {
       where: {
         uuid_user: userId,
         atividade: {
-          tipo_atividade: activityType,
+          activityType: activityType,
         },
       },
     });
@@ -232,7 +235,7 @@ export default class UserAtividadeRepository {
       throw new Error("Atividade inválida!");
     }
 
-    if (activity.max_participants) {
+    if (activity.maxParticipants) {
       const totalParticipants = (
         await this.findAllSubscribersInActivityExceptCurrentUser(
           activityId,
@@ -240,8 +243,8 @@ export default class UserAtividadeRepository {
         )
       ).length;
 
-      if (totalParticipants >= activity.max_participants) {
-        throw new Error(`A atividade ${activity.nome} já está esgotada.`);
+      if (totalParticipants >= activity.maxParticipants) {
+        throw new Error(`A atividade ${activity.name} já está esgotada.`);
       }
     }
   }

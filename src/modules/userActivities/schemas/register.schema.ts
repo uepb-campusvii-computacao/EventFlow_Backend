@@ -2,12 +2,12 @@ import { z } from "zod";
 import { createSchema } from "zod-openapi";
 import "zod-openapi/extend";
 
-export const registerUserInEventSchema = z
+export const registerUserLoggedInActivitiesSchema = z
   .object({
-    atividades: z
+    activities: z
       .array(
         z.object({
-          atividade_id: z.string().uuid(),
+          activityId: z.string().uuid(),
         })
       )
       .min(1, {
@@ -15,18 +15,18 @@ export const registerUserInEventSchema = z
       }),
   })
   .openapi({
-    ref: "RegisterUserInEvent",
+    ref: "RegisterUserLoggedInActivitiesDto",
     description:
       "Schema for registering a user in an event with selected activities.",
     example: {
-      atividades: [
+      activities: [
         {
-          atividade_id: "123e4567-e89b-12d3-a456-426614174000",
+          activityId: "123e4567-e89b-12d3-a456-426614174000",
         },
       ],
     },
   });
 
-export const { components } = createSchema(registerUserInEventSchema);
+export type RegisterUserLoggedInActivitiesDto = z.infer<typeof registerUserLoggedInActivitiesSchema>;
 
-
+export const { components } = createSchema(registerUserLoggedInActivitiesSchema);

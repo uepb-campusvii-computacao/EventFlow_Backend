@@ -1,54 +1,46 @@
 import { Prisma } from "@prisma/client";
 import slugify from "slugify";
-import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import BatchRepository from "../modules/batchs/batch.repository";
+import { RegisterUserInEventDto } from "../modules/events/schemas/registerUserInEvent.schema";
+import UserActivityRepository from "../modules/userActivities/userActivities.repository";
 import { prisma } from "../plugins/prisma";
 import { createPaymentUserResgistration } from "../services/payments/createPaymentUserRegistration";
-import UserAtividadeRepository from "./UserAtividadeRepository";
 import UserInscricaoRepository from "./UserInscricaoRepository";
 
 export default class EventRepository {
   static async registerParticipante(
     tx: Prisma.TransactionClient,
-    {
-      user_id,
-      lote_id,
-      atividades,
-    }: {
-      user_id: string;
-      lote_id: string;
-      atividades: RegisterParticipanteParams["atividades"];
-    }
+    { userId, batchId, activities }: RegisterUserInEventDto
   ) {
-    const lote = await BatchRepository.findBatchById(lote_id);
+    const lote = await BatchRepository.findBatchById(batchId);
 
     if (lote.price > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, user_id, lote_id);
+        await createPaymentUserResgistration(tx, userId, batchId);
 
       await UserInscricaoRepository.createUserInscricao(
         tx,
-        user_id,
-        lote_id,
+        userId,
+        batchId,
         payment_id,
         expiration_date
       );
     } else {
       await UserInscricaoRepository.createUserInscricao(
         tx,
-        user_id,
-        lote_id,
+        userId,
+        batchId,
         "",
         "",
         "GRATUITO"
       );
     }
 
-    await UserAtividadeRepository.registerUserInActivities(
-      tx,
-      user_id,
-      atividades
-    );
+    if (activities) {
+      await UserActivityRepository.registerUserInActivities(tx, userId, {
+        activities,
+      });
+    }
   }
 
   static async findAllActivitiesInEvent(uuid_evento: string) {
@@ -75,18 +67,18 @@ export default class EventRepository {
     return activities;
   }
 
-  static async findAllUserActivities(uuid_evento: string, uuid_user: string) {
-    const activities = await prisma.userAtividade.findMany({
+  static async findAllUserActivities(eventId: string, userId: string) {
+    const activities = await prisma.userActivity.findMany({
       where: {
-        uuid_user,
+        userId,
         AND: {
-          atividade: {
-            eventId: uuid_evento,
+          activity: {
+            eventId,
           },
         },
       },
       select: {
-        atividade: {
+        activity: {
           select: {
             id: true,
             name: true,
@@ -99,7 +91,7 @@ export default class EventRepository {
     });
 
     return activities.map((activity) => ({
-      ...activity.atividade,
+      ...activity.activity,
     }));
   }
 

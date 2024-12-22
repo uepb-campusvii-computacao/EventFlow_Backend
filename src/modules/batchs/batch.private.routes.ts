@@ -36,7 +36,7 @@ BatchPrivateRoutes.put(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/RegisterUserInEvent'
+ *             $ref: '#/components/schemas/RegisterUserLoggedInActivitiesDto'
  *     responses:
  *       201:
  *         description: User successfully registered.

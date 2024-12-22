@@ -8,8 +8,8 @@ import { UserLoginParams } from "../interfaces/userLoginParams";
 import { z, ZodError } from "zod";
 import BatchRepository from "../modules/batchs/batch.repository";
 import { updatePaymentStatusDto } from "../modules/batchs/schemas/updatePayment.schema";
+import UserActivityRepository from "../modules/userActivities/userActivities.repository";
 import { prisma } from "../plugins/prisma";
-import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import UserRepository from "../repositories/UserRepository";
 import { sendPasswordResetEmail } from "../services/emailService";
@@ -161,7 +161,7 @@ export default class UserController {
       const { user_id, lote_id } = req.params;
 
       const atividades: any =
-        await UserAtividadeRepository.findActivitiesByUserId(user_id);
+        await UserActivityRepository.findActivitiesByUserId(user_id);
       const user = await UserRepository.findUserById(user_id);
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
@@ -220,7 +220,7 @@ export default class UserController {
         user_id
       );
 
-      const activities = await UserAtividadeRepository.findActivitiesByUserId(
+      const activities = await UserActivityRepository.findActivitiesByUserId(
         user_id
       );
 

@@ -1,21 +1,15 @@
 import { Perfil } from "@prisma/client";
+import { RegisterUserInEventDto } from "../modules/events/schemas/registerUserInEvent.schema";
 import { prisma } from "../plugins/prisma";
 import EventRepository from "./EventRepository";
 
 export default class UserEventRepository {
   static async registerUserInEvent({
-    uuid_user,
+    userId,
     batchId,
     perfil,
-    atividades,
-  }: {
-    uuid_user: string;
-    perfil?: Perfil;
-    atividades?: {
-      atividade_id: string;
-    }[];
-    batchId: string;
-  }) {
+    activities,
+  }: RegisterUserInEventDto) {
     return prisma.$transaction(async (tx) => {
       const existingBatch = await tx.batch.findFirst({
         where: {
@@ -30,8 +24,8 @@ export default class UserEventRepository {
       const existingUserEvent = await tx.userEvento.findUnique({
         where: {
           uuid_user_uuid_evento: {
-            uuid_user,
-            uuid_evento: existingBatch?.id,
+            uuid_user: userId,
+            uuid_evento: existingBatch?.eventId,
           },
         },
       });
@@ -44,16 +38,16 @@ export default class UserEventRepository {
 
       await tx.userEvento.create({
         data: {
-          uuid_user,
+          uuid_user: userId,
           uuid_evento: existingBatch.eventId,
           perfil: userPerfil,
         },
       });
 
       await EventRepository.registerParticipante(tx, {
-        user_id: uuid_user,
-        lote_id: batchId,
-        atividades,
+        userId,
+        batchId,
+        activities,
       });
     });
   }

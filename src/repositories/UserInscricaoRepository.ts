@@ -4,8 +4,8 @@ import {
   TipoAtividade,
   Usuario,
 } from "@prisma/client";
+import UserAtividadeRepository from "../modules/userActivities/userActivities.repository";
 import { prisma } from "../plugins/prisma";
-import UserAtividadeRepository from "./UserAtividadeRepository";
 
 export interface ActivityUpdate {
   id: string;

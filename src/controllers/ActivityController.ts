@@ -4,14 +4,14 @@ import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsR
 import ActivityRepository from "../modules/activities/activity.repository";
 import { createActivitySchema } from "../modules/activities/schemas/createActivity.schema";
 import { updateActivitySchema } from "../modules/activities/schemas/updateActivity.schema";
-import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
+import UserActivityRepository from "../modules/userActivities/userActivities.repository";
 
 export default class ActivityController {
   static async getSubscribersInActivity(req: Request, res: Response) {
     const { atividade_id } = req.params;
 
     const subscribers =
-      await UserAtividadeRepository.findAllSubscribersInActivity(atividade_id);
+      await UserActivityRepository.findAllSubscribersInActivity(atividade_id);
 
     if (!subscribers) {
       return res.status(400).send("Atividade não encontrada");
@@ -24,15 +24,15 @@ export default class ActivityController {
     try {
       const { atividade_id, user_id } = req.params;
 
-      const activity = await UserAtividadeRepository.findUserAtividadeById(
+      const activity = await UserActivityRepository.findUserAtividadeById(
         atividade_id,
         user_id
       );
 
-      await UserAtividadeRepository.changePresencaValueInActivity(
+      await UserActivityRepository.toggleIsPresentValueInActivity(
         atividade_id,
         user_id,
-        !activity?.presenca
+        !activity?.isPresent
       );
 
       return res.status(200).send("Valor alterado com sucesso!");
@@ -74,7 +74,7 @@ export default class ActivityController {
       let max_participants = Number(activity_exists.maxParticipants);
 
       let total_participants = (
-        await UserAtividadeRepository.findAllSubscribersInActivity(
+        await UserActivityRepository.findAllSubscribersInActivity(
           uuid_atividade_nova
         )
       ).length;
@@ -84,12 +84,12 @@ export default class ActivityController {
       }
 
       if (uuid_atividade_atual == "") {
-        await UserAtividadeRepository.createUserAtividade(
+        await UserActivityRepository.createUserActivity(
           user_id,
           uuid_atividade_nova
         );
       } else {
-        await UserAtividadeRepository.changeUserAtividade(
+        await UserActivityRepository.changeUserActivities(
           uuid_atividade_atual,
           uuid_atividade_nova,
           user_id

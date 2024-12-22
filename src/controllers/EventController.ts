@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { z, ZodError } from "zod";
 import ActivityRepository from "../modules/activities/activity.repository";
 import BatchRepository from "../modules/batchs/batch.repository";
-import { registerUserInEventSchema } from "../modules/batchs/schemas/register.schema";
+import { registerUserLoggedInActivitiesSchema } from "../modules/userActivities/schemas/register.schema";
 import EventRepository from "../repositories/EventRepository";
 import OrderRepository from "../repositories/OrderRepository";
 import ProductRepository from "../repositories/ProductRepository";
@@ -15,16 +15,16 @@ import { getPayment } from "../services/payments/getPayment";
 export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
     try {
-      const { atividades } = registerUserInEventSchema.parse(req.body);
+      const { activities } = registerUserLoggedInActivitiesSchema.parse(req.body);
 
       const { lote_id } = req.params;
 
-      const uuid_user = res.locals.id;
+      const userId = res.locals.id;
 
       await UserEventRepository.registerUserInEvent({
-        uuid_user,
+        userId,
         batchId: lote_id,
-        atividades,
+        activities,
       });
 
       return res
@@ -329,7 +329,7 @@ export default class EventController {
 
       const activityResults: Record<string, any[]> = {};
 
-      allActivities.forEach((activity) => {
+      allActivities.forEach((activity: any) => {
         const type = activity.activityType.toLowerCase();
         if (!activityResults[type]) {
           activityResults[type] = [];

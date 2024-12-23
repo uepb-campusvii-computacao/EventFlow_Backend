@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
 import ActivityRepository from "../modules/activities/activity.repository";
 import { createActivitySchema } from "../modules/activities/schemas/createActivity.schema";
 import { updateActivitySchema } from "../modules/activities/schemas/updateActivity.schema";
+import { changeUserActivitiesSchema } from "../modules/userActivities/schemas/changeUserActivities.schema";
 import UserActivityRepository from "../modules/userActivities/userActivities.repository";
 
 export default class ActivityController {
@@ -58,40 +58,30 @@ export default class ActivityController {
   static async upadateUserActivity(req: Request, res: Response) {
     try {
       const { user_id } = req.params;
-      const {
-        uuid_atividade_atual,
-        uuid_atividade_nova,
-      }: ChangeActivityParamsRequest = req.body;
+      const { currentActivityId, newActivityId } =
+        changeUserActivitiesSchema.parse(req.body);
 
-      const activity_exists = await ActivityRepository.findActivityById(
-        uuid_atividade_nova
+      const activityExists = await ActivityRepository.findActivityById(
+        newActivityId
       );
 
-      if (!activity_exists) {
+      if (!activityExists) {
         throw new Error("UUID inválido!");
       }
 
-      let max_participants = Number(activity_exists.maxParticipants);
-
-      let total_participants = (
-        await UserActivityRepository.findAllSubscribersInActivity(
-          uuid_atividade_nova
-        )
-      ).length;
-
-      if (total_participants >= max_participants) {
-        throw new Error(`A atividade ${activity_exists.name} já está completa`);
+      if (
+        activityExists.maxParticipants &&
+        activityExists.numberOfRegistrations >= activityExists.maxParticipants
+      ) {
+        throw new Error(`A atividade ${activityExists.name} já está completa`);
       }
 
-      if (uuid_atividade_atual == "") {
-        await UserActivityRepository.createUserActivity(
-          user_id,
-          uuid_atividade_nova
-        );
+      if (currentActivityId == "") {
+        await UserActivityRepository.createUserActivity(user_id, newActivityId);
       } else {
         await UserActivityRepository.changeUserActivities(
-          uuid_atividade_atual,
-          uuid_atividade_nova,
+          currentActivityId,
+          newActivityId,
           user_id
         );
       }
@@ -108,7 +98,10 @@ export default class ActivityController {
 
       const body = updateActivitySchema.parse(req.body);
 
-      const activity = await ActivityRepository.updateActivityById(atividade_id, body);
+      const activity = await ActivityRepository.updateActivityById(
+        atividade_id,
+        body
+      );
 
       if (!activity) {
         throw new Error("Falha ao atualizar atividade");
@@ -128,7 +121,9 @@ export default class ActivityController {
 
       const createActivityParams = createActivitySchema.parse(req.body);
 
-      const activity = await ActivityRepository.createActivity(createActivityParams);
+      const activity = await ActivityRepository.createActivity(
+        createActivityParams
+      );
 
       return res.status(200).json(activity);
     } catch (error) {

@@ -128,8 +128,8 @@ ActivityPrivateRoutes.put(
  * /atividades/:atividade_id/inscricoes/:user_id/frequencia:
  *   put:
  *     tags:
- *        - Activities
- *     summary: update user frequency in activity
+ *       - Activities
+ *     summary: Update user frequency in activity
  *     parameters:
  *       - name: atividade_id
  *         in: path
@@ -139,7 +139,7 @@ ActivityPrivateRoutes.put(
  *           type: string
  *       - name: user_id
  *         in: path
- *         description: User id whose frequency will be changed
+ *         description: User ID whose frequency will be changed
  *         required: true
  *         schema:
  *           type: string
@@ -147,23 +147,66 @@ ActivityPrivateRoutes.put(
  *       - bearerAuth: []
  *     responses:
  *       200:
+ *         description: Success message
  *         content:
  *           application/json:
- *             type: string
+ *             schema:
+ *               type: string
  *               example: "Valor alterado com sucesso!"
- *
  *       400:
+ *         description: Error message
  *         content:
  *           application/json:
  *             schema:
  *               type: string
  *               example: "Atividade não encontrada"
- *
- *
  */
 ActivityPrivateRoutes.put(
   "/atividades/:atividade_id/inscricoes/:user_id/frequencia",
   ActivityController.changeActivityPresencaValue
+);
+
+/**
+ * @openapi
+ * /user/:user_id/atividades/troca:
+ *   put:
+ *     tags:
+ *       - Activities
+ *     summary: Change user activities
+ *     parameters:
+ *       - name: user_id
+ *         in: path
+ *         description: User ID whose frequency will be changed
+ *         required: true
+ *         schema:
+ *           type: string
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ChangeUserActivitiesDto'
+ *     responses:
+ *       200:
+ *         description: Success message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: string
+ *               example: "Valor alterado com sucesso!"
+ *       400:
+ *         description: Error message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: string
+ *               example: "Erro"
+ */
+ActivityPrivateRoutes.put(
+  "/user/:user_id/atividades/troca",
+  ActivityController.upadateUserActivity
 );
 
 export default ActivityPrivateRoutes;

@@ -1,4 +1,4 @@
-import { Prisma, TipoAtividade } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import ActivityRepository from "../../modules/activities/activity.repository";
 import { SubscribersInActivityDto } from "../../modules/activities/schemas/subscribersInActivity.schema";
 import { prisma } from "../../plugins/prisma";
@@ -72,8 +72,6 @@ export default class UserActivityRepository {
         activityId: newActivityId,
       },
     });
-
-    console.log("Atualizada com sucesso!");
   }
 
   static async findActivitiesByUserId(userId: string) {
@@ -208,7 +206,25 @@ export default class UserActivityRepository {
     }));
   }
 
-  static async deleteAllActivityByUserAndType(
+  static async toggleIsPresentValueInActivity(
+    activityId: string,
+    userId: string,
+    isPresent: boolean
+  ) {
+    await prisma.userActivity.update({
+      where: {
+        userId_activityId: {
+          activityId,
+          userId,
+        },
+      },
+      data: {
+        isPresent,
+      },
+    });
+  }
+
+  /* static async deleteAllActivityByUserAndType(
     userId: string,
     activityType: TipoAtividade
   ) {
@@ -230,14 +246,14 @@ export default class UserActivityRepository {
     }
 
     if (activity.maxParticipants) {
-      /*
+      
 const totalParticipants = (
         await this.findAllSubscribersInActivityExceptCurrentUser(
           activityId,
           userId
         )
       ).length;
-      */
+      
 
       if (activity.numberOfRegistrations >= activity.maxParticipants) {
         throw new Error(`A atividade ${activity.name} já está esgotada.`);
@@ -261,22 +277,5 @@ const totalParticipants = (
       },
     });
   }
-
-  static async toggleIsPresentValueInActivity(
-    activityId: string,
-    userId: string,
-    isPresent: boolean
-  ) {
-    await prisma.userActivity.update({
-      where: {
-        userId_activityId: {
-          activityId,
-          userId,
-        },
-      },
-      data: {
-        isPresent,
-      },
-    });
-  }
+*/
 }

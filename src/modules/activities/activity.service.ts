@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
-import ActivityRepository from "../modules/activities/activity.repository";
-import { createActivitySchema } from "../modules/activities/schemas/createActivity.schema";
-import { updateActivitySchema } from "../modules/activities/schemas/updateActivity.schema";
-import { changeUserActivitiesSchema } from "../modules/userActivities/schemas/changeUserActivities.schema";
-import UserActivityRepository from "../modules/userActivities/userActivities.repository";
+import ActivityRepository from "../../modules/activities/activity.repository";
+import { createActivitySchema } from "../../modules/activities/schemas/createActivity.schema";
+import { updateActivitySchema } from "../../modules/activities/schemas/updateActivity.schema";
+import { changeUserActivitiesSchema } from "../../modules/userActivities/schemas/changeUserActivities.schema";
+import UserActivityRepository from "../../modules/userActivities/userActivities.repository";
 
-export default class ActivityController {
+export default class ActivityService {
   static async getSubscribersInActivity(req: Request, res: Response) {
     const { atividade_id } = req.params;
 
@@ -24,7 +24,7 @@ export default class ActivityController {
     try {
       const { atividade_id, user_id } = req.params;
 
-      const activity = await UserActivityRepository.findUserAtividadeById(
+      const activity = await UserActivityRepository.findUserActivityDetails(
         atividade_id,
         user_id
       );

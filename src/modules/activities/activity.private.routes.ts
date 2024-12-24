@@ -1,10 +1,12 @@
 import express from "express";
-import ActivityController from "../../controllers/ActivityController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
+import ActivityService from "./activity.service";
 
 const ActivityPrivateRoutes = express.Router();
 
 ActivityPrivateRoutes.use(checkToken);
+
+const service = ActivityService;
 
 /**
  * @openapi
@@ -40,7 +42,7 @@ ActivityPrivateRoutes.use(checkToken);
  */
 ActivityPrivateRoutes.get(
   "/atividades/:atividade_id/inscricoes",
-  ActivityController.getSubscribersInActivity
+  service.getSubscribersInActivity
 );
 
 /**
@@ -75,10 +77,7 @@ ActivityPrivateRoutes.get(
  *
  *
  */
-ActivityPrivateRoutes.get(
-  "/atividades/:atividade_id",
-  ActivityController.getActivityById
-);
+ActivityPrivateRoutes.get("/atividades/:atividade_id", service.getActivityById);
 
 /**
  * @openapi
@@ -118,10 +117,7 @@ ActivityPrivateRoutes.get(
  *
  *
  */
-ActivityPrivateRoutes.put(
-  "/atividades/:atividade_id",
-  ActivityController.updateActivity
-);
+ActivityPrivateRoutes.put("/atividades/:atividade_id", service.updateActivity);
 
 /**
  * @openapi
@@ -163,7 +159,7 @@ ActivityPrivateRoutes.put(
  */
 ActivityPrivateRoutes.put(
   "/atividades/:atividade_id/inscricoes/:user_id/frequencia",
-  ActivityController.changeActivityPresencaValue
+  service.changeActivityPresencaValue
 );
 
 /**
@@ -206,7 +202,7 @@ ActivityPrivateRoutes.put(
  */
 ActivityPrivateRoutes.put(
   "/user/:user_id/atividades/troca",
-  ActivityController.upadateUserActivity
+  service.upadateUserActivity
 );
 
 export default ActivityPrivateRoutes;

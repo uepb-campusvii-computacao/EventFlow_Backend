@@ -1,9 +1,9 @@
 import express from "express";
-import ActivityController from "../../controllers/ActivityController";
 import EventController from "../../controllers/EventController";
 import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
+import ActivityService from "../../modules/activities/activity.service";
 
 const EventPrivateRoutes = express.Router();
 EventPrivateRoutes.use(checkToken)
@@ -52,7 +52,7 @@ EventPrivateRoutes.post(
 EventPrivateRoutes.post(
   "/events/:event_id/atividades/create",
   verifyAdminUserRoleInEvent,
-  ActivityController.createActivity
+  ActivityService.createActivity
 );
 
 export default EventPrivateRoutes;

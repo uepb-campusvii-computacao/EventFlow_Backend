@@ -1,9 +1,9 @@
 import express from "express";
-import ActivityController from "../../controllers/ActivityController";
 import EventController from "../../controllers/EventController";
 import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
+import ActivityService from "../../modules/activities/activity.service";
 
 
 const UserPrivateRoutes = express.Router();
@@ -37,7 +37,7 @@ UserPrivateRoutes.get(
 
 UserPrivateRoutes.put(
   "/user/:user_id/atividades/troca",
-  ActivityController.upadateUserActivity
+  ActivityService.upadateUserActivity
 );
 
 UserPrivateRoutes.get(

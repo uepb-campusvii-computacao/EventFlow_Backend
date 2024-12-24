@@ -2,10 +2,15 @@ import { Prisma } from "@prisma/client";
 import ActivityRepository from "../../modules/activities/activity.repository";
 import { SubscribersInActivityDto } from "../../modules/activities/schemas/subscribersInActivity.schema";
 import { prisma } from "../../plugins/prisma";
+import { ActivitiesOfUserDto } from "./schemas/activitiesOfUser.schema";
 import { RegisterUserLoggedInActivitiesDto } from "./schemas/register.schema";
+import { UserActivityDetailsDto } from "./schemas/userActivityDetails.schema";
 
 export default class UserActivityRepository {
-  static async createUserActivity(userId: string, activityId: string) {
+  static async createUserActivity(
+    userId: string,
+    activityId: string
+  ): Promise<void> {
     await prisma.userActivity.create({
       data: {
         userId,
@@ -18,7 +23,7 @@ export default class UserActivityRepository {
     tx: Prisma.TransactionClient,
     userId: string,
     { activities }: RegisterUserLoggedInActivitiesDto
-  ) {
+  ): Promise<void> {
     for (const item of activities || []) {
       try {
         const activity = await ActivityRepository.findActivityById(
@@ -62,7 +67,7 @@ export default class UserActivityRepository {
     currentActivityId: string,
     newActivityId: string,
     userId: string
-  ) {
+  ): Promise<void> {
     await prisma.userActivity.updateMany({
       where: {
         userId,
@@ -74,7 +79,9 @@ export default class UserActivityRepository {
     });
   }
 
-  static async findActivitiesByUserId(userId: string) {
+  static async findActivitiesByUserId(
+    userId: string
+  ): Promise<ActivitiesOfUserDto> {
     const response = await prisma.userActivity.findMany({
       where: {
         userId,
@@ -82,11 +89,11 @@ export default class UserActivityRepository {
       select: {
         activity: {
           select: {
-            id: true,
             name: true,
             activityType: true,
           },
         },
+        activityId: true,
         isPresent: true,
       },
       orderBy: {
@@ -97,22 +104,39 @@ export default class UserActivityRepository {
     });
 
     return response.map((item) => ({
+      ...item,
       ...item.activity,
-      isPresent: item.isPresent,
     }));
   }
 
-  static async findUserAtividadeById(activityId: string, userId: string) {
-    const activity = await prisma.userActivity.findUnique({
+  static async findUserActivityDetails(
+    activityId: string,
+    userId: string
+  ): Promise<UserActivityDetailsDto> {
+    const userActivityDetails = await prisma.userActivity.findUniqueOrThrow({
       where: {
         userId_activityId: {
           activityId,
           userId,
         },
       },
+      select: {
+        activity: {
+          select: {
+            name: true,
+            activityType: true,
+            date: true,
+          },
+        },
+        isPresent: true,
+        activityId: true,
+      },
     });
 
-    return activity;
+    return {
+      ...userActivityDetails,
+      ...userActivityDetails.activity,
+    };
   }
 
   // static async changeActivity(

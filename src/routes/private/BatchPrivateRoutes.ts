@@ -11,6 +11,13 @@ BatchPrivateRoutes.put(
   UserController.updatePaymentStatus
 );
 
+//receber os dados do cartao caso o pagamento seja necessário
+/*
+    token: 'SEU_TOKEN_DO_CARTAO',
+    description: 'Descrição do produto',
+    installments: 1,
+    payment_method_id: 'visa',
+*/
 BatchPrivateRoutes.post("/lote/:lote_id/register", EventController.registerParticipanteInEvent);
 
 export default BatchPrivateRoutes;

@@ -65,11 +65,11 @@ export default class UserController {
           organization: z.string(),
           password: z
             .string()
-            .min(8, "Password must be at least 8 characters long"),
+            .min(8, "A senha deve conter pelo menos 8 caracteres"),
           confirm_password: z.string(),
         })
         .refine((data) => data.password === data.confirm_password, {
-          message: "Passwords do not match",
+          message: "As senhas divergem",
           path: ["confirm_password"],
         });
 

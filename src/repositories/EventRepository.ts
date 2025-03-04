@@ -73,7 +73,7 @@ export default class EventRepository {
 
     if (lote.preco > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, payer_id, lote_id);
+        await createPaymentUserResgistration(tx, guest_id, lote_id);
 
       await UserInscricaoRepository.createUserInscricao(
         tx,

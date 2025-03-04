@@ -30,6 +30,7 @@ export default class EventRepository {
         tx,
         user_id,
         lote_id,
+        user_id,
         payment_id,
         expiration_date
       );
@@ -38,6 +39,7 @@ export default class EventRepository {
         tx,
         user_id,
         lote_id,
+        user_id,
         "",
         "",
         "GRATUITO"
@@ -48,6 +50,55 @@ export default class EventRepository {
       await UserAtividadeRepository.registerUserInActivities(
         tx,
         user_id,
+        atividades
+      );
+    }
+  }
+
+  static async registerGuest(
+    tx: Prisma.TransactionClient,
+    {
+      guest_id,
+      payer_id,
+      lote_id,
+      atividades,
+    }: {
+      guest_id: string;
+      payer_id: string;
+      lote_id: string;
+      atividades?: RegisterParticipanteParams["atividades"];
+    }
+  ) {
+    const lote = await LoteRepository.findLoteById(lote_id);
+
+    if (lote.preco > 0) {
+      const { payment_id, expiration_date } =
+        await createPaymentUserResgistration(tx, payer_id, lote_id);
+
+      await UserInscricaoRepository.createUserInscricao(
+        tx,
+        guest_id,
+        lote_id,
+        payer_id,
+        payment_id,
+        expiration_date
+      );
+    } else {
+      await UserInscricaoRepository.createUserInscricao(
+        tx,
+        guest_id,
+        lote_id,
+        payer_id,
+        "",
+        "",
+        "GRATUITO"
+      );
+    }
+
+    if (atividades) {
+      await UserAtividadeRepository.registerUserInActivities(
+        tx,
+        guest_id,
         atividades
       );
     }

@@ -10,6 +10,8 @@ import ProductRepository from "../repositories/ProductRepository";
 import UserEventRepository from "../repositories/UserEventRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
+import { UserService } from "../services/user/user.service";
+import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
 
 export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
@@ -33,6 +35,77 @@ export default class EventController {
       const perfil: Perfil = "PARTICIPANTE";
       await UserEventRepository.registerUserInEvent({
         uuid_user,
+        lote_id,
+        perfil,
+        atividades,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Usuário cadastrado com sucesso!" });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).send(error.message);
+      } else {
+        return res.status(400).json(error);
+      }
+    }
+  }
+
+  static async registerGuestInEvent(req: Request, res: Response) {
+    try {
+      const registerUserInEventSchema = z.object({
+        atividades: z
+          .array(
+            z.object({
+              atividade_id: z.string(),
+            })
+          )
+          .optional(),
+        name: z.string(),
+        cpf: z.string().length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
+        email: z.string().email(),
+        nickname: z.string(),
+        organization: z.string(),
+      });
+
+      const { atividades, name, cpf, email, nickname, organization } =
+        registerUserInEventSchema.parse(req.body);
+
+      const { lote_id } = req.params;
+
+      if (!lote_id) {
+        throw new Error("Lote requerido!");
+      }
+
+      const payer_id = res.locals.id;
+
+      await UserInscricaoService.verifyGuests(payer_id, lote_id);
+
+      const guest = await UserService.registerGuest({
+        name,
+        cpf,
+        email,
+        nickname,
+        organization,
+      });
+
+      if (!guest) {
+        throw new Error("Não foi possível cadastrar o usuário!");
+      }
+
+      const perfil: Perfil = "PARTICIPANTE";
+      await UserEventRepository.registerGuestInEvent({
+        uuid_guest: guest.uuid_user,
+        payer_id,
         lote_id,
         perfil,
         atividades,
@@ -206,17 +279,25 @@ export default class EventController {
     try {
       const { event_id } = req.params;
       const user_id = res.locals.id;
-  
-      const userInscription = await UserInscricaoRepository.findUserInscriptionByEventId(user_id, event_id);
+
+      const userInscription =
+        await UserInscricaoRepository.findUserInscriptionByEventId(
+          user_id,
+          event_id
+        );
 
       return res.status(200).json({
-        message: userInscription ? "Usuário está inscrito neste evento." : "Usuário não está inscrito neste evento.",
+        message: userInscription
+          ? "Usuário está inscrito neste evento."
+          : "Usuário não está inscrito neste evento.",
         isSubscribed: userInscription != undefined,
-        ...userInscription
+        ...userInscription,
       });
     } catch (error) {
       console.error("Erro ao verificar inscrição do usuário:", error);
-      return res.status(500).json({ message: "Ocorreu um erro ao processar a solicitação." });
+      return res
+        .status(500)
+        .json({ message: "Ocorreu um erro ao processar a solicitação." });
     }
   }
 
@@ -343,25 +424,27 @@ export default class EventController {
     try {
       const { event_id } = req.params;
       const { id } = res.locals;
-  
-      const allActivities = await EventRepository.findAllUserActivities(event_id, id);
-  
+
+      const allActivities = await EventRepository.findAllUserActivities(
+        event_id,
+        id
+      );
+
       const activityResults: Record<string, any[]> = {};
 
-      allActivities.forEach(activity => {
+      allActivities.forEach((activity) => {
         const type = activity.tipo_atividade.toLowerCase();
         if (!activityResults[type]) {
           activityResults[type] = [];
         }
         activityResults[type].push(activity);
       });
-  
+
       return res.status(200).json(activityResults);
     } catch (error) {
       return res.status(400).send(error);
     }
   }
-  
 
   static async getAllActivitiesInEventOrdenateByTipo(
     req: Request,

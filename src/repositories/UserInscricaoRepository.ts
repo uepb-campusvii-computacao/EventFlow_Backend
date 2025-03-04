@@ -17,14 +17,16 @@ export default class UserInscricaoRepository {
     tx: Prisma.TransactionClient,
     user_uuid: string,
     lote_id: string,
+    payer_id: string,
     payment_id?: string,
     expiration_date?: string,
-    status_pagamento?: StatusPagamento,
+    status_pagamento?: StatusPagamento
   ) {
     return await tx.userInscricao.create({
       data: {
         uuid_user: user_uuid,
         uuid_lote: lote_id,
+        uuid_payer: payer_id,
         id_payment_mercado_pago: payment_id || null,
         expiration_datetime: expiration_date || null,
         status_pagamento: status_pagamento,
@@ -64,22 +66,42 @@ export default class UserInscricaoRepository {
     }
   }
 
+  static async findUserGuestSubscriptions(user_id: string, event_id: string) {
+    const userSubscriptions = await prisma.userInscricao.findMany({
+      where: {
+        NOT: [
+          {
+            uuid_user: user_id,
+          },
+        ],
+        uuid_payer: user_id,
+        AND: {
+          lote: {
+            uuid_evento: event_id,
+          },
+        },
+      },
+    });
+
+    return userSubscriptions;
+  }
+
   static async findLoteIdAndUserIdByEmail(event_id: string, email: string) {
     const user = await prisma.userInscricao.findFirst({
       where: {
         lote: {
-          uuid_evento: event_id
+          uuid_evento: event_id,
         },
         AND: {
           usuario: {
-            email
-          }
-        }
+            email,
+          },
+        },
       },
       select: {
         uuid_lote: true,
         uuid_user: true,
-      }
+      },
     });
 
     return {
@@ -100,8 +122,8 @@ export default class UserInscricaoRepository {
           uuid_evento,
         },
         AND: {
-          uuid_user
-        }
+          uuid_user,
+        },
       },
     });
 
@@ -232,9 +254,9 @@ export default class UserInscricaoRepository {
         where: {
           UserEvento: {
             some: {
-              uuid_user
-            }
-          }
+              uuid_user,
+            },
+          },
         },
         select: {
           uuid_evento: true,
@@ -243,7 +265,7 @@ export default class UserInscricaoRepository {
         },
       });
 
-      console.log("teste")
+      console.log("teste");
 
       return eventos;
     } catch (error) {

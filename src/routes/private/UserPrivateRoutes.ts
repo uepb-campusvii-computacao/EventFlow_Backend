@@ -5,14 +5,10 @@ import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
 
-
 const UserPrivateRoutes = express.Router();
 UserPrivateRoutes.use(checkToken);
 
-UserPrivateRoutes.get(
-  "/user/",
-  UserController.findUser
-);
+UserPrivateRoutes.get("/user/", UserController.findUser);
 
 UserPrivateRoutes.put(
   "/user/:user_id",
@@ -25,10 +21,7 @@ UserPrivateRoutes.delete(
   UserController.deleteUser
 );
 
-UserPrivateRoutes.get(
-  "/user/my-events",
-  EventController.getAllEventsByIdUser
-);
+UserPrivateRoutes.get("/user/my-events", EventController.getAllEventsByIdUser);
 
 UserPrivateRoutes.get(
   "/user/in-event/:event_id",
@@ -44,5 +37,8 @@ UserPrivateRoutes.get(
   "/user/events/:event_id/my-activities",
   EventController.getAllActivitiesInEventByUser
 );
+
+// caso queira desacoplar a criação de um usuário convidado do registro em um evento
+// UserPrivateRoutes.post("/user/registerGuest", UserController.registerGuest);
 
 export default UserPrivateRoutes;

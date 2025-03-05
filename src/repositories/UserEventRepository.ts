@@ -147,17 +147,13 @@ export default class UserEventRepository {
         throw new Error("Algum dos usuários já participa deste evento");
       }
 
-      await Promise.all(
-        usersIds.map(async (userId) => {
-          await tx.userEvento.create({
-            data: {
-              uuid_user: userId,
-              uuid_evento: existingLote?.uuid_evento,
-              perfil: perfil || Perfil.PARTICIPANTE,
-            },
-          });
-        })
-      );
+      await tx.userEvento.createMany({
+        data: usersIds.map((userId) => ({
+          uuid_user: userId,
+          uuid_evento: existingLote.uuid_evento,
+          perfil: perfil || Perfil.PARTICIPANTE,
+        })),
+      });
 
       const payerId = usersIds[usersIds.length - 1];
 

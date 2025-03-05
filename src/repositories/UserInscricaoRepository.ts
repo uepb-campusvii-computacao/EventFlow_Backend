@@ -34,6 +34,29 @@ export default class UserInscricaoRepository {
     });
   }
 
+  public static async createManyUsersSubscriptions(
+    tx: Prisma.TransactionClient,
+    usersIds: string[],
+    lote_id: string,
+    payer_id: string,
+    payment_id?: string,
+    expiration_date?: string,
+    status_pagamento?: StatusPagamento
+  ) {
+    const usersSubscriptions = await tx.userInscricao.createMany({
+      data: usersIds.map((user_id) => ({
+        uuid_user: user_id,
+        uuid_lote: lote_id,
+        uuid_payer: payer_id,
+        id_payment_mercado_pago: payment_id || null,
+        expiration_datetime: expiration_date || null,
+        status_pagamento: status_pagamento,
+      })),
+    });
+
+    return usersSubscriptions;
+  }
+
   static async findUserInscriptionByEventId(user_id: string, event_id: string) {
     try {
       const lote = await prisma.lote.findFirst({

@@ -83,7 +83,7 @@ export async function createPaymentMultipleUsersResgistration(
     },
   });
 
-  if (!users || users.length < 3) {
+  if (!users || users.length < usersIds.length) {
     throw new Error("Não foi possível encontrar todos os usuários");
   }
 

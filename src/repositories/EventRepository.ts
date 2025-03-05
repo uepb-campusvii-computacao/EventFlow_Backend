@@ -127,31 +127,23 @@ export default class EventRepository {
       const { payment_id, expiration_date } =
         await createPaymentMultipleUsersResgistration(tx, usersIds, loteId);
 
-      await Promise.all(
-        usersIds.map(async (guestId) => {
-          await UserInscricaoRepository.createUserInscricao(
-            tx,
-            guestId,
-            loteId,
-            payerId,
-            payment_id,
-            expiration_date
-          );
-        })
+      await UserInscricaoRepository.createManyUsersSubscriptions(
+        tx,
+        usersIds,
+        loteId,
+        payerId,
+        payment_id,
+        expiration_date
       );
     } else {
-      await Promise.all(
-        usersIds.map(async (guestId) => {
-          await UserInscricaoRepository.createUserInscricao(
-            tx,
-            guestId,
-            loteId,
-            payerId,
-            "",
-            "",
-            "GRATUITO"
-          );
-        })
+      await UserInscricaoRepository.createManyUsersSubscriptions(
+        tx,
+        usersIds,
+        loteId,
+        payerId,
+        "",
+        "",
+        "GRATUITO"
       );
     }
 

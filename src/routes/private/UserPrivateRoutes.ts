@@ -39,6 +39,6 @@ UserPrivateRoutes.get(
 );
 
 // caso queira desacoplar a criação de um usuário convidado do registro em um evento
-// UserPrivateRoutes.post("/user/registerGuest", UserController.registerGuest);
+UserPrivateRoutes.post("/user/registerGuest", UserController.registerGuest);
 
 export default UserPrivateRoutes;

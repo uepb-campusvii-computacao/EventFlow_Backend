@@ -24,8 +24,8 @@ BatchPrivateRoutes.post(
 );
 
 BatchPrivateRoutes.post(
-  "/lote/:lote_id/registerGuest",
-  EventController.registerGuestInEvent
+  "/lote/:lote_id/register-multiple",
+  EventController.registerMultipleUsersInEvent
 );
 
 export default BatchPrivateRoutes;

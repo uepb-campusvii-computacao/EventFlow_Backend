@@ -10,7 +10,6 @@ import ProductRepository from "../repositories/ProductRepository";
 import UserEventRepository from "../repositories/UserEventRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
-import { UserService } from "../services/user/user.service";
 import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
 
 export default class EventController {
@@ -60,7 +59,7 @@ export default class EventController {
     }
   }
 
-  static async registerGuestInEvent(req: Request, res: Response) {
+  static async registerMultipleUsersInEvent(req: Request, res: Response) {
     try {
       const registerUserInEventSchema = z.object({
         atividades: z
@@ -70,15 +69,12 @@ export default class EventController {
             })
           )
           .optional(),
-        name: z.string(),
-        cpf: z.string().length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
-        email: z.string().email(),
-        nickname: z.string(),
-        organization: z.string(),
+        usersIds: z.array(z.string()).min(1).max(2),
       });
 
-      const { atividades, name, cpf, email, nickname, organization } =
-        registerUserInEventSchema.parse(req.body);
+      const { atividades, usersIds } = registerUserInEventSchema.parse(
+        req.body
+      );
 
       const { lote_id } = req.params;
 
@@ -87,28 +83,16 @@ export default class EventController {
       }
 
       const payer_id = res.locals.id;
+      usersIds.push(payer_id);
 
       await UserInscricaoService.verifyGuests(payer_id, lote_id);
 
-      const guest = await UserService.registerGuest({
-        name,
-        cpf,
-        email,
-        nickname,
-        organization,
-      });
-
-      if (!guest) {
-        throw new Error("Não foi possível cadastrar o usuário!");
-      }
-
       const perfil: Perfil = "PARTICIPANTE";
-      await UserEventRepository.registerGuestInEvent({
-        uuid_guest: guest.uuid_user,
-        payer_id,
-        lote_id,
-        perfil,
+      await UserEventRepository.registerMultipleUsersInEvent({
         atividades,
+        usersIds,
+        loteId: lote_id,
+        perfil,
       });
 
       return res

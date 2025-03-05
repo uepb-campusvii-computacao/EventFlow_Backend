@@ -175,6 +175,26 @@ export default class UserInscricaoRepository {
     }
   }
 
+  public static async findUserSubscriptionByPayerAndLote(
+    payerId: string,
+    loteId: string
+  ) {
+    try {
+      const inscricao = await prisma.userInscricao.findUnique({
+        where: {
+          uuid_lote_uuid_user: {
+            uuid_lote: loteId,
+            uuid_user: payerId,
+          },
+          uuid_payer: payerId,
+        },
+      });
+      return inscricao;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async changeStatusPagamento(
     uuid_user: string,
     uuid_lote: string,

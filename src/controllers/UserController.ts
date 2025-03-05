@@ -15,6 +15,7 @@ import { sendPasswordResetEmail } from "../services/emailService";
 import {
   getPayment,
   getPaymentStatusForInscricao,
+  getPaymentStatusForMultipleSubscriptions,
 } from "../services/payments/getPayment";
 import { checkPassword } from "../services/user/checkPassword";
 import { deleteUserByUserId } from "../services/user/deleteUserByUserId";
@@ -192,6 +193,59 @@ export default class UserController {
             lote_id,
             status
           );
+        }
+      }
+
+      return res.status(200).send("Valor alterado");
+    } catch (error) {
+      return res.status(400).send("Informações inválidas");
+    }
+  }
+
+  static async realizarPagamentoMultipleUsers(req: Request, res: Response) {
+    try {
+      const { lote_id, users_ids } = req.params;
+      const { action } = req.body;
+
+      const usersIdsSplitted = users_ids.split(";");
+      const payerId = usersIdsSplitted[usersIdsSplitted.length - 1];
+
+      if (action === "payment.updated") {
+        const statusPromise = getPaymentStatusForMultipleSubscriptions(
+          payerId,
+          lote_id
+        );
+        const usersSubscriptionsPromise = prisma.userInscricao.findMany({
+          where: {
+            uuid_lote: lote_id,
+            usuario: {
+              uuid_user: { in: usersIdsSplitted },
+            },
+          },
+        });
+
+        const [status, usersSubscriptions] = await Promise.all([
+          statusPromise,
+          usersSubscriptionsPromise,
+        ]);
+
+        if (usersSubscriptions.length !== usersIdsSplitted.length) {
+          throw new Error("One or more users not found");
+        }
+
+        if (
+          status &&
+          usersSubscriptions.every(
+            (user) => user.status_pagamento !== StatusPagamento.GRATUITO
+          )
+        ) {
+          await prisma.userInscricao.updateMany({
+            where: {
+              uuid_lote: lote_id,
+              usuario: { uuid_user: { in: usersIdsSplitted } },
+            },
+            data: { status_pagamento: status },
+          });
         }
       }
 

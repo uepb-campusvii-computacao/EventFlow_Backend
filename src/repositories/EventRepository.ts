@@ -2,7 +2,10 @@ import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
-import { createPaymentUserResgistration } from "../services/payments/createPaymentUserRegistration";
+import {
+  createPaymentMultipleUsersResgistration,
+  createPaymentUserResgistration,
+} from "../services/payments/createPaymentUserRegistration";
 import LoteRepository from "./LoteRepository";
 import UserAtividadeRepository from "./UserAtividadeRepository";
 import UserInscricaoRepository from "./UserInscricaoRepository";
@@ -100,6 +103,67 @@ export default class EventRepository {
         tx,
         guest_id,
         atividades
+      );
+    }
+  }
+
+  static async registerMultipleUsers(
+    tx: Prisma.TransactionClient,
+    {
+      usersIds,
+      payerId,
+      loteId,
+      atividades,
+    }: {
+      usersIds: string[];
+      payerId: string;
+      loteId: string;
+      atividades?: RegisterParticipanteParams["atividades"];
+    }
+  ) {
+    const lote = await LoteRepository.findLoteById(loteId);
+
+    if (lote.preco > 0) {
+      const { payment_id, expiration_date } =
+        await createPaymentMultipleUsersResgistration(tx, usersIds, loteId);
+
+      await Promise.all(
+        usersIds.map(async (guestId) => {
+          await UserInscricaoRepository.createUserInscricao(
+            tx,
+            guestId,
+            loteId,
+            payerId,
+            payment_id,
+            expiration_date
+          );
+        })
+      );
+    } else {
+      await Promise.all(
+        usersIds.map(async (guestId) => {
+          await UserInscricaoRepository.createUserInscricao(
+            tx,
+            guestId,
+            loteId,
+            payerId,
+            "",
+            "",
+            "GRATUITO"
+          );
+        })
+      );
+    }
+
+    if (atividades) {
+      await Promise.all(
+        usersIds.map(async (guestId) => {
+          await UserAtividadeRepository.registerUserInActivities(
+            tx,
+            guestId,
+            atividades
+          );
+        })
       );
     }
   }

@@ -5,7 +5,7 @@ import { payment } from "../../lib/mercado_pago";
 export async function createPaymentUserResgistration(
   tx: Prisma.TransactionClient,
   user_uuid: string,
-  lote_id: string,
+  lote_id: string
 ) {
   const user = await tx.usuario.findUnique({
     where: {
@@ -19,7 +19,7 @@ export async function createPaymentUserResgistration(
 
   const lote = await tx.lote.findUnique({
     where: {
-      uuid_lote : lote_id,
+      uuid_lote: lote_id,
     },
   });
 
@@ -28,13 +28,22 @@ export async function createPaymentUserResgistration(
   }
 
   const current_date = new Date();
-  const date_of_expiration = addDays(current_date, 10); 
+  const date_of_expiration = addDays(current_date, 10);
 
+  /* caso seja cartão adicionar os dados provenientes do front
+    {token: 'SEU_TOKEN_DO_CARTAO',
+    description: 'Descrição do produto',
+    installments: 1,
+    payment_method_id: 'visa',} no body
+  */
   const body = {
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: "pix",
-    date_of_expiration: format(date_of_expiration, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
+    date_of_expiration: format(
+      date_of_expiration,
+      "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    ),
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: {
       email: user.email,
@@ -45,7 +54,7 @@ export async function createPaymentUserResgistration(
     idempotencyKey: `${user_uuid}-${lote_id}`,
   };
 
-  try{
+  try {
     const response = await payment.create({
       body,
       requestOptions,
@@ -55,8 +64,8 @@ export async function createPaymentUserResgistration(
       payment_id: response.id!.toString(),
       expiration_date: response.date_of_expiration!,
     };
-  }catch(error){
-    console.log(error)
+  } catch (error) {
+    console.log(error);
     throw new Error("Erro ao criar o pagamento");
   }
 }

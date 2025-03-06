@@ -17,7 +17,7 @@ export default class EventRepository {
     }: {
       user_id: string;
       lote_id: string;
-      atividades: RegisterParticipanteParams["atividades"];
+      atividades?: RegisterParticipanteParams["atividades"];
     }
   ) {
     const lote = await LoteRepository.findLoteById(lote_id);
@@ -44,11 +44,13 @@ export default class EventRepository {
       );
     }
 
-    await UserAtividadeRepository.registerUserInActivities(
-      tx,
-      user_id,
-      atividades
-    );
+    if (atividades) {
+      await UserAtividadeRepository.registerUserInActivities(
+        tx,
+        user_id,
+        atividades
+      );
+    }
   }
 
   static async findAllActivitiesInEvent(uuid_evento: string) {
@@ -85,9 +87,9 @@ export default class EventRepository {
         uuid_user,
         AND: {
           atividade: {
-            uuid_evento
-          }
-        }
+            uuid_evento,
+          },
+        },
       },
       select: {
         atividade: {

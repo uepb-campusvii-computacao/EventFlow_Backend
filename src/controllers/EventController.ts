@@ -36,12 +36,12 @@ export default class EventController {
         uuid_user,
         lote_id,
         perfil,
-        atividades,
+        atividades
       });
 
       return res
         .status(200)
-        .json({ message: "Usuário cadastrado com sucesso!" });
+        .json({ message: "Usuário cadastrado com sucesso!"});
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -189,22 +189,6 @@ export default class EventController {
         oficina,
       } = req.body;
 
-      console.log(req.body);
-
-      const activities: { id: string; type: TipoAtividade }[] = [];
-
-      if (minicurso) {
-        activities.push({ id: minicurso, type: "MINICURSO" });
-      }
-
-      if (workshop) {
-        activities.push({ id: workshop, type: "WORKSHOP" });
-      }
-
-      if (oficina) {
-        activities.push({ id: oficina, type: "OFICINA" });
-      }
-
       const updatedUser = await UserInscricaoRepository.updateParticipante(
         user_id,
         nome,
@@ -212,7 +196,6 @@ export default class EventController {
         email,
         instituicao,
         status_pagamento,
-        activities
       );
 
       return res.status(200).json({

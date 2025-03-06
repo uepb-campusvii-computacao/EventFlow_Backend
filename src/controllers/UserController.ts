@@ -65,16 +65,16 @@ export default class UserController {
           cpf: z
             .string()
             .length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
-          email: z.string().email("Invalid email format"),
+          email: z.string().email("Email com formato inválido"),
           nickname: z.string(),
           organization: z.string(),
           password: z
             .string()
-            .min(8, "Password must be at least 8 characters long"),
+            .min(8, "A senha deve conter pelo menos 8 caracteres"),
           confirm_password: z.string(),
         })
         .refine((data) => data.password === data.confirm_password, {
-          message: "Passwords do not match",
+          message: "As senhas divergem",
           path: ["confirm_password"],
         });
 
@@ -108,7 +108,48 @@ export default class UserController {
 
       return res
         .status(500)
-        .json({ message: "An unexpected error occurred", error: error });
+        .json({ message: "Um erro inesperado aconteceu", error: error });
+    }
+  }
+
+  static async registerGuest(req: Request, res: Response) {
+    try {
+      const registerGuestSchema = z.object({
+        name: z.string(),
+        cpf: z.string().length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
+        email: z.string().email(),
+        nickname: z.string(),
+        organization: z.string(),
+      });
+
+      const { name, cpf, email, nickname, organization } =
+        registerGuestSchema.parse(req.body);
+
+      const guest = await UserService.registerGuest({
+        name,
+        cpf,
+        email,
+        nickname,
+        organization,
+      });
+
+      return res.status(201).json(guest);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "Um erro inesperado aconteceu", error: error });
     }
   }
 
@@ -435,7 +476,7 @@ export default class UserController {
   static async requestPasswordReset(req: Request, res: Response) {
     try {
       const requestPasswordResetSchema = z.object({
-        email: z.string().email("Invalid email format"),
+        email: z.string().email("Email com formato inválido"),
       });
 
       const { email } = requestPasswordResetSchema.parse(req.body);
@@ -469,7 +510,7 @@ export default class UserController {
 
       return res
         .status(500)
-        .json({ message: "An unexpected error occurred", error: error });
+        .json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
 
@@ -505,7 +546,7 @@ export default class UserController {
 
       return res
         .status(500)
-        .json({ message: "An unexpected error occurred", error: error });
+        .json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
 }

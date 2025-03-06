@@ -60,7 +60,7 @@ export default class UserController {
       const registerUserSchema = z
         .object({
           name: z.string(),
-          email: z.string().email("Invalid email format"),
+          email: z.string().email("Email com formato inválido"),
           nickname: z.string(),
           organization: z.string(),
           password: z
@@ -102,7 +102,7 @@ export default class UserController {
 
       return res
         .status(500)
-        .json({ message: "An unexpected error occurred", error: error });
+        .json({ message: "Um erro inesperado aconteceu", error: error });
     }
   }
 
@@ -335,7 +335,7 @@ export default class UserController {
   static async requestPasswordReset(req: Request, res: Response){
     try {
       const requestPasswordResetSchema = z.object({
-        email: z.string().email("Invalid email format"),
+        email: z.string().email("Email com formato inválido"),
       });
   
       const { email } = requestPasswordResetSchema.parse(req.body);
@@ -365,7 +365,7 @@ export default class UserController {
         return res.status(400).json(formattedErrors);
       }
   
-      return res.status(500).json({ message: "An unexpected error occurred", error: error });
+      return res.status(500).json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
   
@@ -397,7 +397,7 @@ export default class UserController {
         return res.status(400).json(formattedErrors);
       }
   
-      return res.status(500).json({ message: "An unexpected error occurred", error: error });
+      return res.status(500).json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
 }

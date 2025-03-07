@@ -19,7 +19,7 @@ export default class UserInscricaoRepository {
     lote_id: string,
     payment_id?: string,
     expiration_date?: string,
-    status_pagamento?: StatusPagamento,
+    status_pagamento?: StatusPagamento
   ) {
     return await tx.userInscricao.create({
       data: {
@@ -68,18 +68,18 @@ export default class UserInscricaoRepository {
     const user = await prisma.userInscricao.findFirst({
       where: {
         lote: {
-          uuid_evento: event_id
+          uuid_evento: event_id,
         },
         AND: {
           usuario: {
-            email
-          }
-        }
+            email,
+          },
+        },
       },
       select: {
         uuid_lote: true,
         uuid_user: true,
-      }
+      },
     });
 
     return {
@@ -100,8 +100,8 @@ export default class UserInscricaoRepository {
           uuid_evento,
         },
         AND: {
-          uuid_user
-        }
+          uuid_user,
+        },
       },
     });
 
@@ -232,9 +232,9 @@ export default class UserInscricaoRepository {
         where: {
           UserEvento: {
             some: {
-              uuid_user
-            }
-          }
+              uuid_user,
+            },
+          },
         },
         select: {
           uuid_evento: true,
@@ -243,7 +243,7 @@ export default class UserInscricaoRepository {
         },
       });
 
-      console.log("teste")
+      console.log("teste");
 
       return eventos;
     } catch (error) {

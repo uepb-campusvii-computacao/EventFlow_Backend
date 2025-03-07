@@ -153,47 +153,6 @@ export default class UserController {
     }
   }
 
-  static async registerGuest(req: Request, res: Response) {
-    try {
-      const registerGuestSchema = z.object({
-        name: z.string(),
-        cpf: z.string().length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
-        email: z.string().email(),
-        nickname: z.string(),
-        organization: z.string(),
-      });
-
-      const { name, cpf, email, nickname, organization } =
-        registerGuestSchema.parse(req.body);
-
-      const guest = await UserService.registerGuest({
-        name,
-        cpf,
-        email,
-        nickname,
-        organization,
-      });
-
-      return res.status(201).json(guest);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map((err) => ({
-          field: err.path.join("."),
-          message: err.message,
-        }));
-        return res.status(400).json(formattedErrors);
-      }
-
-      if (error instanceof Error) {
-        return res.status(400).json({ message: error.message });
-      }
-
-      return res
-        .status(500)
-        .json({ message: "An unexpected error occurred", error: error });
-    }
-  }
-
   static async getLoteIdAndUserId(req: Request, res: Response) {
     try {
       const { event_id } = req.params;

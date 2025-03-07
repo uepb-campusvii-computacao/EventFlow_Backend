@@ -59,21 +59,11 @@ export default class UserInscricaoRepository {
 
   static async findUserInscriptionByEventId(user_id: string, event_id: string) {
     try {
-      const lote = await prisma.lote.findFirst({
+      const userInscription = await prisma.userInscricao.findFirst({
         where: {
-          uuid_evento: event_id,
-        },
-      });
-
-      if (!lote) {
-        return null;
-      }
-
-      const userInscription = await prisma.userInscricao.findUnique({
-        where: {
-          uuid_lote_uuid_user: {
-            uuid_lote: lote.uuid_lote,
-            uuid_user: user_id,
+          uuid_user: user_id,
+          lote: {
+            uuid_evento: event_id,
           },
         },
         include: {

@@ -66,6 +66,7 @@ export default class UserEventRepository {
     lote_id,
     perfil,
     atividades,
+    paymentInfo,
   }: {
     uuid_guest: string;
     payer_id: string;
@@ -74,6 +75,7 @@ export default class UserEventRepository {
       atividade_id: string;
     }[];
     lote_id: string;
+    paymentInfo?: PaymentInfo;
   }) {
     return prisma.$transaction(async (tx) => {
       const existingLote = await tx.lote.findFirst({
@@ -112,6 +114,7 @@ export default class UserEventRepository {
         payer_id,
         lote_id,
         atividades,
+        paymentInfo,
       });
     });
   }
@@ -121,11 +124,13 @@ export default class UserEventRepository {
     usersIds,
     loteId,
     perfil,
+    paymentInfo,
   }: {
     atividades?: { atividade_id: string }[];
     usersIds: string[];
     loteId: string;
     perfil?: Perfil;
+    paymentInfo?: PaymentInfo;
   }) {
     return prisma.$transaction(async (tx) => {
       const existingLote = await tx.lote.findFirst({
@@ -166,6 +171,7 @@ export default class UserEventRepository {
         loteId,
         payerId,
         atividades,
+        paymentInfo,
       });
     });
   }

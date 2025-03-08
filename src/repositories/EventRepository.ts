@@ -68,18 +68,25 @@ export default class EventRepository {
       payer_id,
       lote_id,
       atividades,
+      paymentInfo,
     }: {
       guest_id: string;
       payer_id: string;
       lote_id: string;
       atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
     }
   ) {
     const lote = await LoteRepository.findLoteById(lote_id);
 
     if (lote.preco > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, guest_id, lote_id);
+        await createPaymentUserResgistration(
+          tx,
+          guest_id,
+          lote_id,
+          paymentInfo
+        );
 
       await UserInscricaoRepository.createUserInscricao(
         tx,
@@ -117,18 +124,25 @@ export default class EventRepository {
       payerId,
       loteId,
       atividades,
+      paymentInfo,
     }: {
       usersIds: string[];
       payerId: string;
       loteId: string;
       atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
     }
   ) {
     const lote = await LoteRepository.findLoteById(loteId);
 
     if (lote.preco > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentMultipleUsersResgistration(tx, usersIds, loteId);
+        await createPaymentMultipleUsersResgistration(
+          tx,
+          usersIds,
+          loteId,
+          paymentInfo
+        );
 
       await UserInscricaoRepository.createManyUsersSubscriptions(
         tx,

@@ -89,11 +89,26 @@ export default class EventController {
           )
           .optional(),
         usersIds: z.array(z.string()).min(1).max(2),
+        paymentData: z
+          .object({
+            token: z.string(),
+            issuer_id: z.string(),
+            payment_method_id: z.string(),
+            transaction_amount: z.number(),
+            installments: z.number(),
+            payer: z.object({
+              email: z.string(),
+              identification: z.object({
+                type: z.string(),
+                number: z.string(),
+              }),
+            }),
+          })
+          .optional(),
       });
 
-      const { atividades, usersIds } = registerUserInEventSchema.parse(
-        req.body
-      );
+      const { atividades, usersIds, paymentData } =
+        registerUserInEventSchema.parse(req.body);
 
       const { lote_id } = req.params;
 
@@ -112,6 +127,7 @@ export default class EventController {
         usersIds,
         loteId: lote_id,
         perfil,
+        paymentInfo: paymentData,
       });
 
       return res

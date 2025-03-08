@@ -243,8 +243,6 @@ export default class UserInscricaoRepository {
         },
       });
 
-      console.log("teste");
-
       return eventos;
     } catch (error) {
       console.error("Erro ao buscar eventos:", error);

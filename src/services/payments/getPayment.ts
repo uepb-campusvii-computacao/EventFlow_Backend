@@ -41,7 +41,6 @@ export async function getPaymentStatusForInscricao(user_id: string, lote_id: str
     }
 
     const { status } = await payment.get({ id: user.id_payment_mercado_pago });
-
     if (!status) {
       throw new Error("Status de pagamento não encontrado!");
     }

@@ -23,9 +23,27 @@ export default class EventController {
             })
           )
           .optional(),
+        paymentData: z
+          .object({
+            token: z.string(),
+            issuer_id: z.string(),
+            payment_method_id: z.string(),
+            transaction_amount: z.number(),
+            installments: z.number(),
+            payer: z.object({
+              email: z.string(),
+              identification: z.object({
+                type: z.string(),
+                number: z.string(),
+              }),
+            }),
+          })
+          .optional(),
       });
 
-      const { atividades } = registerUserInEventSchema.parse(req.body);
+      const { atividades, paymentData } = registerUserInEventSchema.parse(
+        req.body
+      );
 
       const { lote_id } = req.params;
 
@@ -36,12 +54,13 @@ export default class EventController {
         uuid_user,
         lote_id,
         perfil,
-        atividades
+        atividades,
+        paymentInfo: paymentData,
       });
 
       return res
         .status(200)
-        .json({ message: "Usuário cadastrado com sucesso!"});
+        .json({ message: "Usuário cadastrado com sucesso!" });
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -195,7 +214,7 @@ export default class EventController {
         nome_cracha,
         email,
         instituicao,
-        status_pagamento,
+        status_pagamento
       );
 
       return res.status(200).json({

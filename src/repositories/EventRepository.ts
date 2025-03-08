@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import {
   createPaymentMultipleUsersResgistration,
   createPaymentUserResgistration,
+  PaymentInfo,
 } from "../services/payments/createPaymentUserRegistration";
 import LoteRepository from "./LoteRepository";
 import UserAtividadeRepository from "./UserAtividadeRepository";
@@ -17,17 +18,19 @@ export default class EventRepository {
       user_id,
       lote_id,
       atividades,
+      paymentInfo,
     }: {
       user_id: string;
       lote_id: string;
       atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
     }
   ) {
     const lote = await LoteRepository.findLoteById(lote_id);
 
     if (lote.preco > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, user_id, lote_id);
+        await createPaymentUserResgistration(tx, user_id, lote_id, paymentInfo);
 
       await UserInscricaoRepository.createUserInscricao(
         tx,

@@ -31,7 +31,7 @@ export default class UserController {
     const userExists = await UserRepository.findUserByEmail(email);
 
     if (!userExists) {
-      return res.status(401).send("email não encontrado");
+      return res.status(403).send("Email não encontrado");
     }
 
     const password_encrypted = userExists.senha || "";
@@ -39,7 +39,7 @@ export default class UserController {
     const check_password = await checkPassword(senha, password_encrypted);
 
     if (!check_password) {
-      return res.status(401).send("Senha inválida!");
+      return res.status(403).send("Senha inválida!");
     }
 
     const token = jsonwebtoken.sign(
@@ -177,7 +177,6 @@ export default class UserController {
     try {
       const { lote_id, user_id } = req.params;
       const { action } = req.body;
-
       if (action === "payment.updated") {
         const [status, user_inscricao] = await Promise.all([
           getPaymentStatusForInscricao(user_id, lote_id),
@@ -195,7 +194,6 @@ export default class UserController {
           );
         }
       }
-
       return res.status(200).send("Valor alterado");
     } catch (error) {
       return res.status(400).send("Informações inválidas");

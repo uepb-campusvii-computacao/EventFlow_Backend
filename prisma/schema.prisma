@@ -37,17 +37,20 @@ model Usuario {
 }
 
 model Evento {
-    uuid_evento     String       @id @default(uuid())
-    uuid_user_owner String
-    nome            String       @unique
-    banner_img_url  String?      @db.LongText
-    date            DateTime?
-    conteudo        String       @db.LongText
-    usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
-    lote            Lote[]
-    atividade       Atividade[]
-    Produto         Produto[]
-    UserEvento      UserEvento[]
+    uuid_evento        String       @id @default(uuid())
+    uuid_user_owner    String
+    nome               String       @unique
+    banner_img_url     String?      @db.LongText
+    date               DateTime?
+    conteudo           String       @db.LongText
+    active             Boolean      @default(true)
+    colors             String?
+    background_img_url String?
+    usuario            Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
+    lote               Lote[]
+    atividade          Atividade[]
+    Produto            Produto[]
+    UserEvento         UserEvento[]
 
     @@map("tb_evento")
 }

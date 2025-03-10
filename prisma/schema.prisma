@@ -5,172 +5,176 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+    provider = "mysql"
+    url      = env("DATABASE_URL")
 }
 
 model Usuario {
-  uuid_user     String          @id @default(uuid())
-  nome          String
-  nome_cracha   String
-  instituicao   String
-  email         String          @unique
-  senha         String?
-  active        Boolean         @default(true)
-  passwordResetToken  String?
-  passwordResetExpires DateTime?
-  evento        Evento[]
-  userAtividade UserAtividade[]
-  userInscricao UserInscricao[]
-  Pagamento     Pagamento[]
-  Venda         Venda[]
-  UserEvento    UserEvento[]
+    uuid_user            String          @id @default(uuid())
+    nome                 String
+    nome_cracha          String
+    cpf                  String          @unique
+    instituicao          String
+    email                String          @unique
+    senha                String?
+    active               Boolean         @default(true)
+    passwordResetToken   String?
+    passwordResetExpires DateTime?
+    evento               Evento[]
+    userAtividade        UserAtividade[]
+    userInscricao        UserInscricao[]
+    Pagamento            Pagamento[]
+    Venda                Venda[]
+    UserEvento           UserEvento[]
+    UserInscricao        UserInscricao[] @relation(name: "UserInscricaoPayer")
 
-  @@map("tb_usuario")
+    @@map("tb_usuario")
 }
 
 model Evento {
-  uuid_evento     String       @id @default(uuid())
-  uuid_user_owner String
-  nome            String       @unique
-  banner_img_url  String?      @db.LongText
-  date            DateTime?
-  conteudo         String       @db.LongText
-  usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
-  lote            Lote[]
-  atividade       Atividade[]
-  Produto         Produto[]
-  UserEvento      UserEvento[]
+    uuid_evento     String       @id @default(uuid())
+    uuid_user_owner String
+    nome            String       @unique
+    banner_img_url  String?      @db.LongText
+    date            DateTime?
+    conteudo        String       @db.LongText
+    usuario         Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
+    lote            Lote[]
+    atividade       Atividade[]
+    Produto         Produto[]
+    UserEvento      UserEvento[]
 
-  @@map("tb_evento")
+    @@map("tb_evento")
 }
 
 model Lote {
-  uuid_lote     String          @id @default(uuid())
-  uuid_evento   String
-  preco         Float
-  nome          String
-  descricao     String?
-  ativo         Boolean         @default(true)
-  evento        Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
-  userInscricao UserInscricao[]
+    uuid_lote     String          @id @default(uuid())
+    uuid_evento   String
+    preco         Float
+    nome          String
+    descricao     String?
+    ativo         Boolean         @default(true)
+    evento        Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
+    userInscricao UserInscricao[]
 
-  @@map("tb_lote")
+    @@map("tb_lote")
 }
 
 model Atividade {
-  uuid_atividade   String          @id @default(uuid())
-  uuid_evento      String
-  date             DateTime?
-  nome             String
-  descricao        String?         @db.Text
-  max_participants Int?
-  tipo_atividade   TipoAtividade   @default(MINICURSO)
-  evento           Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
-  userAtividade    UserAtividade[]
+    uuid_atividade   String          @id @default(uuid())
+    uuid_evento      String
+    date             DateTime?
+    nome             String
+    descricao        String?         @db.Text
+    max_participants Int?
+    tipo_atividade   TipoAtividade   @default(MINICURSO)
+    evento           Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
+    userAtividade    UserAtividade[]
 
-  @@map("tb_atividade")
+    @@map("tb_atividade")
 }
 
 model UserEvento {
-  uuid_user   String
-  uuid_evento String
-  create_at   DateTime @default(now())
-  perfil      Perfil   @default(PARTICIPANTE)
-  usuario     Usuario  @relation(fields: [uuid_user], references: [uuid_user])
-  evento      Evento   @relation(fields: [uuid_evento], references: [uuid_evento])
+    uuid_user   String
+    uuid_evento String
+    create_at   DateTime @default(now())
+    perfil      Perfil   @default(PARTICIPANTE)
+    usuario     Usuario  @relation(fields: [uuid_user], references: [uuid_user])
+    evento      Evento   @relation(fields: [uuid_evento], references: [uuid_evento])
 
-  @@id([uuid_user, uuid_evento])
-  @@map("tb_user_evento")
+    @@id([uuid_user, uuid_evento])
+    @@map("tb_user_evento")
 }
 
 model UserAtividade {
-  uuid_user      String
-  uuid_atividade String
-  presenca       Boolean   @default(false)
-  user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
-  atividade      Atividade @relation(fields: [uuid_atividade], references: [uuid_atividade])
+    uuid_user      String
+    uuid_atividade String
+    presenca       Boolean   @default(false)
+    user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
+    atividade      Atividade @relation(fields: [uuid_atividade], references: [uuid_atividade])
 
-  @@id([uuid_user, uuid_atividade])
-  @@map("tb_usuario_atividade")
+    @@id([uuid_user, uuid_atividade])
+    @@map("tb_usuario_atividade")
 }
 
 model UserInscricao {
-  uuid_user               String
-  uuid_lote               String
-  credenciamento          Boolean         @default(false)
-  id_payment_mercado_pago String?
-  expiration_datetime     DateTime?
-  status_pagamento        StatusPagamento @default(PENDENTE)
-  usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
-  lote                    Lote            @relation(fields: [uuid_lote], references: [uuid_lote])
+    uuid_user               String
+    uuid_lote               String
+    uuid_payer              String
+    credenciamento          Boolean         @default(false)
+    id_payment_mercado_pago String?
+    expiration_datetime     DateTime?
+    status_pagamento        StatusPagamento @default(PENDENTE)
+    usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
+    lote                    Lote            @relation(fields: [uuid_lote], references: [uuid_lote])
+    payer                   Usuario         @relation(name: "UserInscricaoPayer", fields: [uuid_payer], references: [uuid_user])
 
-  @@id([uuid_lote, uuid_user])
-  @@map("tb_usuario_inscricao")
+    @@id([uuid_lote, uuid_user])
+    @@map("tb_usuario_inscricao")
 }
 
 model Produto {
-  uuid_produto String  @id @default(uuid())
-  nome         String
-  descricao    String? @db.Text
-  preco        Float
-  estoque      Int     @default(0)
-  imagem_url   String?
-  uuid_evento  String
-  evento       Evento  @relation(fields: [uuid_evento], references: [uuid_evento])
-  Venda        Venda[]
+    uuid_produto String  @id @default(uuid())
+    nome         String
+    descricao    String? @db.Text
+    preco        Float
+    estoque      Int     @default(0)
+    imagem_url   String?
+    uuid_evento  String
+    evento       Evento  @relation(fields: [uuid_evento], references: [uuid_evento])
+    Venda        Venda[]
 
-  @@map("tb_produto")
+    @@map("tb_produto")
 }
 
 model Pagamento {
-  uuid_pagamento          String          @id @default(uuid())
-  uuid_user               String
-  id_payment_mercado_pago String
-  valor_total             Float
-  status_pagamento        StatusPagamento @default(PENDENTE)
-  data_pagamento          DateTime?
-  data_criacao            DateTime        @default(now())
-  usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
-  vendas                  Venda[]
+    uuid_pagamento          String          @id @default(uuid())
+    uuid_user               String
+    id_payment_mercado_pago String
+    valor_total             Float
+    status_pagamento        StatusPagamento @default(PENDENTE)
+    data_pagamento          DateTime?
+    data_criacao            DateTime        @default(now())
+    usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
+    vendas                  Venda[]
 
-  @@map("tb_pagamento")
+    @@map("tb_pagamento")
 }
 
 model Venda {
-  uuid_venda     String    @id @default(uuid())
-  uuid_user      String
-  uuid_produto   String
-  quantidade     Int       @default(1)
-  uuid_pagamento String
-  produto        Produto   @relation(fields: [uuid_produto], references: [uuid_produto])
-  user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
-  pagamento      Pagamento @relation(fields: [uuid_pagamento], references: [uuid_pagamento])
+    uuid_venda     String    @id @default(uuid())
+    uuid_user      String
+    uuid_produto   String
+    quantidade     Int       @default(1)
+    uuid_pagamento String
+    produto        Produto   @relation(fields: [uuid_produto], references: [uuid_produto])
+    user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
+    pagamento      Pagamento @relation(fields: [uuid_pagamento], references: [uuid_pagamento])
 
-  @@map("tb_venda")
+    @@map("tb_venda")
 }
 
 enum Perfil {
-  ADMINISTRADOR
-  PARTICIPANTE
-  ORGANIZADOR
+    ADMINISTRADOR
+    PARTICIPANTE
+    ORGANIZADOR
 }
 
 enum TipoAtividade {
-  MINICURSO
-  WORKSHOP
-  OFICINA
-  PALESTRA
+    MINICURSO
+    WORKSHOP
+    OFICINA
+    PALESTRA
 }
 
 enum StatusPagamento {
-  PENDENTE
-  REALIZADO
-  EXPIRADO
-  GRATUITO
+    PENDENTE
+    REALIZADO
+    EXPIRADO
+    GRATUITO
 }

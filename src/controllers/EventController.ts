@@ -10,6 +10,7 @@ import ProductRepository from "../repositories/ProductRepository";
 import UserEventRepository from "../repositories/UserEventRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
+import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
 
 export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
@@ -22,9 +23,27 @@ export default class EventController {
             })
           )
           .optional(),
+        paymentData: z
+          .object({
+            token: z.string(),
+            issuer_id: z.string(),
+            payment_method_id: z.string(),
+            transaction_amount: z.number(),
+            installments: z.number(),
+            payer: z.object({
+              email: z.string(),
+              identification: z.object({
+                type: z.string(),
+                number: z.string(),
+              }),
+            }),
+          })
+          .optional(),
       });
 
-      const { atividades } = registerUserInEventSchema.parse(req.body);
+      const { atividades, paymentData } = registerUserInEventSchema.parse(
+        req.body
+      );
 
       const { lote_id } = req.params;
 
@@ -35,12 +54,85 @@ export default class EventController {
         uuid_user,
         lote_id,
         perfil,
-        atividades
+        atividades,
+        paymentInfo: paymentData,
       });
 
       return res
         .status(200)
-        .json({ message: "Usuário cadastrado com sucesso!"});
+        .json({ message: "Usuário cadastrado com sucesso!" });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).send(error.message);
+      } else {
+        return res.status(400).json(error);
+      }
+    }
+  }
+
+  static async registerMultipleUsersInEvent(req: Request, res: Response) {
+    try {
+      const registerUserInEventSchema = z.object({
+        atividades: z
+          .array(
+            z.object({
+              atividade_id: z.string(),
+            })
+          )
+          .optional(),
+        usersIds: z.array(z.string()).min(1).max(2),
+        paymentData: z
+          .object({
+            token: z.string(),
+            issuer_id: z.string(),
+            payment_method_id: z.string(),
+            transaction_amount: z.number(),
+            installments: z.number(),
+            payer: z.object({
+              email: z.string(),
+              identification: z.object({
+                type: z.string(),
+                number: z.string(),
+              }),
+            }),
+          })
+          .optional(),
+      });
+
+      const { atividades, usersIds, paymentData } =
+        registerUserInEventSchema.parse(req.body);
+
+      const { lote_id } = req.params;
+
+      if (!lote_id) {
+        throw new Error("Lote requerido!");
+      }
+
+      const payer_id = res.locals.id;
+      usersIds.push(payer_id);
+
+      await UserInscricaoService.verifyGuests(payer_id, lote_id);
+
+      const perfil: Perfil = "PARTICIPANTE";
+      await UserEventRepository.registerMultipleUsersInEvent({
+        atividades,
+        usersIds,
+        loteId: lote_id,
+        perfil,
+        paymentInfo: paymentData,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Usuário cadastrado com sucesso!" });
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -138,7 +230,7 @@ export default class EventController {
         nome_cracha,
         email,
         instituicao,
-        status_pagamento,
+        status_pagamento
       );
 
       return res.status(200).json({
@@ -189,17 +281,25 @@ export default class EventController {
     try {
       const { event_id } = req.params;
       const user_id = res.locals.id;
-  
-      const userInscription = await UserInscricaoRepository.findUserInscriptionByEventId(user_id, event_id);
+
+      const userInscription =
+        await UserInscricaoRepository.findUserInscriptionByEventId(
+          user_id,
+          event_id
+        );
 
       return res.status(200).json({
-        message: userInscription ? "Usuário está inscrito neste evento." : "Usuário não está inscrito neste evento.",
+        message: userInscription
+          ? "Usuário está inscrito neste evento."
+          : "Usuário não está inscrito neste evento.",
         isSubscribed: userInscription != undefined,
-        ...userInscription
+        ...userInscription,
       });
     } catch (error) {
       console.error("Erro ao verificar inscrição do usuário:", error);
-      return res.status(500).json({ message: "Ocorreu um erro ao processar a solicitação." });
+      return res
+        .status(500)
+        .json({ message: "Ocorreu um erro ao processar a solicitação." });
     }
   }
 
@@ -326,25 +426,27 @@ export default class EventController {
     try {
       const { event_id } = req.params;
       const { id } = res.locals;
-  
-      const allActivities = await EventRepository.findAllUserActivities(event_id, id);
-  
+
+      const allActivities = await EventRepository.findAllUserActivities(
+        event_id,
+        id
+      );
+
       const activityResults: Record<string, any[]> = {};
 
-      allActivities.forEach(activity => {
+      allActivities.forEach((activity) => {
         const type = activity.tipo_atividade.toLowerCase();
         if (!activityResults[type]) {
           activityResults[type] = [];
         }
         activityResults[type].push(activity);
       });
-  
+
       return res.status(200).json(activityResults);
     } catch (error) {
       return res.status(400).send(error);
     }
   }
-  
 
   static async getAllActivitiesInEventOrdenateByTipo(
     req: Request,

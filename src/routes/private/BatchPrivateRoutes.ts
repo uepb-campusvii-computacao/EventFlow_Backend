@@ -4,7 +4,7 @@ import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 
 const BatchPrivateRoutes = express.Router();
-BatchPrivateRoutes.use(checkToken)
+BatchPrivateRoutes.use(checkToken);
 
 BatchPrivateRoutes.put(
   "/lote/:lote_id/inscricoes/:user_id",
@@ -18,6 +18,14 @@ BatchPrivateRoutes.put(
     installments: 1,
     payment_method_id: 'visa',
 */
-BatchPrivateRoutes.post("/lote/:lote_id/register", EventController.registerParticipanteInEvent);
+BatchPrivateRoutes.post(
+  "/lote/:lote_id/register",
+  EventController.registerParticipanteInEvent
+);
+
+BatchPrivateRoutes.post(
+  "/lote/:lote_id/register-multiple",
+  EventController.registerMultipleUsersInEvent
+);
 
 export default BatchPrivateRoutes;

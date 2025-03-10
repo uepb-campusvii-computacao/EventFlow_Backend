@@ -2,7 +2,11 @@ import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
-import { createPaymentUserResgistration } from "../services/payments/createPaymentUserRegistration";
+import {
+  createPaymentMultipleUsersResgistration,
+  createPaymentUserResgistration,
+  PaymentInfo,
+} from "../services/payments/createPaymentUserRegistration";
 import LoteRepository from "./LoteRepository";
 import UserAtividadeRepository from "./UserAtividadeRepository";
 import UserInscricaoRepository from "./UserInscricaoRepository";
@@ -14,22 +18,25 @@ export default class EventRepository {
       user_id,
       lote_id,
       atividades,
+      paymentInfo,
     }: {
       user_id: string;
       lote_id: string;
       atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
     }
   ) {
     const lote = await LoteRepository.findLoteById(lote_id);
 
     if (lote.preco > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, user_id, lote_id);
+        await createPaymentUserResgistration(tx, user_id, lote_id, paymentInfo);
 
       await UserInscricaoRepository.createUserInscricao(
         tx,
         user_id,
         lote_id,
+        user_id,
         payment_id,
         expiration_date
       );
@@ -38,6 +45,7 @@ export default class EventRepository {
         tx,
         user_id,
         lote_id,
+        user_id,
         "",
         "",
         "GRATUITO"
@@ -49,6 +57,122 @@ export default class EventRepository {
         tx,
         user_id,
         atividades
+      );
+    }
+  }
+
+  static async registerGuest(
+    tx: Prisma.TransactionClient,
+    {
+      guest_id,
+      payer_id,
+      lote_id,
+      atividades,
+      paymentInfo,
+    }: {
+      guest_id: string;
+      payer_id: string;
+      lote_id: string;
+      atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
+    }
+  ) {
+    const lote = await LoteRepository.findLoteById(lote_id);
+
+    if (lote.preco > 0) {
+      const { payment_id, expiration_date } =
+        await createPaymentUserResgistration(
+          tx,
+          guest_id,
+          lote_id,
+          paymentInfo
+        );
+
+      await UserInscricaoRepository.createUserInscricao(
+        tx,
+        guest_id,
+        lote_id,
+        payer_id,
+        payment_id,
+        expiration_date
+      );
+    } else {
+      await UserInscricaoRepository.createUserInscricao(
+        tx,
+        guest_id,
+        lote_id,
+        payer_id,
+        "",
+        "",
+        "GRATUITO"
+      );
+    }
+
+    if (atividades) {
+      await UserAtividadeRepository.registerUserInActivities(
+        tx,
+        guest_id,
+        atividades
+      );
+    }
+  }
+
+  static async registerMultipleUsers(
+    tx: Prisma.TransactionClient,
+    {
+      usersIds,
+      payerId,
+      loteId,
+      atividades,
+      paymentInfo,
+    }: {
+      usersIds: string[];
+      payerId: string;
+      loteId: string;
+      atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
+    }
+  ) {
+    const lote = await LoteRepository.findLoteById(loteId);
+
+    if (lote.preco > 0) {
+      const { payment_id, expiration_date } =
+        await createPaymentMultipleUsersResgistration(
+          tx,
+          usersIds,
+          loteId,
+          paymentInfo
+        );
+
+      await UserInscricaoRepository.createManyUsersSubscriptions(
+        tx,
+        usersIds,
+        loteId,
+        payerId,
+        payment_id,
+        expiration_date
+      );
+    } else {
+      await UserInscricaoRepository.createManyUsersSubscriptions(
+        tx,
+        usersIds,
+        loteId,
+        payerId,
+        "",
+        "",
+        "GRATUITO"
+      );
+    }
+
+    if (atividades) {
+      await Promise.all(
+        usersIds.map(async (guestId) => {
+          await UserAtividadeRepository.registerUserInActivities(
+            tx,
+            guestId,
+            atividades
+          );
+        })
       );
     }
   }

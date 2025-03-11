@@ -56,14 +56,16 @@ model Evento {
 }
 
 model Lote {
-    uuid_lote     String          @id @default(uuid())
-    uuid_evento   String
-    preco         Float
-    nome          String
-    descricao     String?
-    ativo         Boolean         @default(true)
-    evento        Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
-    userInscricao UserInscricao[]
+    uuid_lote      String          @id @default(uuid())
+    uuid_evento    String
+    preco          Float
+    nome           String
+    descricao      String?
+    max_inscricoes Int
+    inscricoes     Int
+    ativo          Boolean         @default(true)
+    evento         Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
+    userInscricao  UserInscricao[]
 
     @@map("tb_lote")
 }

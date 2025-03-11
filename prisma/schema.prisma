@@ -44,6 +44,8 @@ model Evento {
     date               DateTime?
     conteudo           String       @db.LongText
     active             Boolean      @default(true)
+    isPrivate          Boolean      @default(false)
+    password           String?
     colors             String?
     background_img_url String?
     usuario            Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])

@@ -55,4 +55,10 @@ EventPrivateRoutes.post(
   ActivityController.createActivity
 );
 
+EventPrivateRoutes.post(
+  "/events/:event_id/verify-password",
+  
+
+)
+
 export default EventPrivateRoutes;

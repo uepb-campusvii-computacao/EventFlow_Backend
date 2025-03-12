@@ -60,11 +60,6 @@ EventPrivateRoutes.post(
 );
 
 EventPrivateRoutes.post(
-  "/events/:event_id/verify-privacy",
-  EventController.verifyEventPrivacy
-);
-
-EventPrivateRoutes.post(
   "/events/:event_id/verify-password",
   EventController.verifyEventPassword
 );

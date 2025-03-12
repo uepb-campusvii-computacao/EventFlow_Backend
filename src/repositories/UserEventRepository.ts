@@ -43,6 +43,17 @@ export default class UserEventRepository {
         throw new Error("Usuário já participa deste evento");
       }
 
+      await tx.lote.update({
+        where: {
+          uuid_lote: lote_id,
+        },
+        data: {
+          inscricoes: {
+            increment: 1,
+          },
+        },
+      });
+
       await tx.userEvento.create({
         data: {
           uuid_user,
@@ -155,6 +166,17 @@ export default class UserEventRepository {
       if (existingUsers.length >= 1) {
         throw new Error("Algum dos usuários já participa deste evento");
       }
+
+      await tx.lote.update({
+        where: {
+          uuid_lote: loteId,
+        },
+        data: {
+          inscricoes: {
+            increment: usersIds.length,
+          },
+        },
+      });
 
       await tx.userEvento.createMany({
         data: usersIds.map((userId) => ({

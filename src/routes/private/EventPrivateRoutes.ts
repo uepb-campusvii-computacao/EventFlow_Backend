@@ -1,5 +1,6 @@
 import express from "express";
 import ActivityController from "../../controllers/ActivityController";
+import { BatchController } from "../../controllers/BatchController";
 import EventController from "../../controllers/EventController";
 import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
@@ -50,6 +51,12 @@ EventPrivateRoutes.post(
   "/events/:event_id/atividades/create",
   verifyAdminUserRoleInEvent,
   ActivityController.createActivity
+);
+
+EventPrivateRoutes.post(
+  "/events/:event_id/lote/create",
+  verifyAdminUserRoleInEvent,
+  BatchController.createBatch
 );
 
 EventPrivateRoutes.post(

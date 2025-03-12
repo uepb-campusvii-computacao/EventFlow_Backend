@@ -1,6 +1,7 @@
 import { Perfil, TipoAtividade } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
+import jsonwebtoken from "jsonwebtoken";
 import { z, ZodError } from "zod";
 import ActivityRepository from "../repositories/ActivityRepository";
 import EventRepository from "../repositories/EventRepository";
@@ -10,6 +11,8 @@ import ProductRepository from "../repositories/ProductRepository";
 import UserEventRepository from "../repositories/UserEventRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
+import { checkPassword } from "../services/user/checkPassword";
+import { encryptPassword } from "../services/user/encryptPassword";
 import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
 
 export default class EventController {
@@ -532,8 +535,28 @@ export default class EventController {
               return new Date(arg);
           }, z.date().optional()),
           conteudo: z.string(),
+          active: z.boolean().default(true).optional(),
+          isPrivate: z.boolean().default(false).optional(),
+          colors: z.string().optional(),
+          background_img_url: z.string().optional(),
+          password: z.string().min(8).optional(),
+          confirm_password: z.string().min(8).optional(),
+        })
+        .refine((data) => data.password === data.confirm_password, {
+          message: "As senhas divergem",
+          path: ["confirm_password"],
         })
         .parse(req.body);
+
+      const { password } = createEventParams;
+
+      if (password) {
+        const passwordHashed = await encryptPassword(password);
+
+        createEventParams.password = passwordHashed;
+      }
+
+      delete createEventParams.confirm_password;
 
       const event = await EventRepository.createEvent({
         uuid_user_owner: uuid_user,
@@ -550,6 +573,103 @@ export default class EventController {
         return res.status(400).json(formattedErrors);
       }
 
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
+    }
+  }
+
+  public static async verifyEventPassword(req: Request, res: Response) {
+    try {
+      const verifyEventPasswordSchema = z.object({
+        password: z.string(),
+      });
+
+      const { event_id } = req.params;
+      const { password } = verifyEventPasswordSchema.parse(req.body);
+
+      const event = await EventRepository.getEventPassword(event_id);
+
+      if (!event) {
+        return res.status(400).json({ message: "Evento não encontrado!" });
+      }
+
+      if (!event.password) {
+        return res.status(400).json({ message: "Evento não possui senha!" });
+      }
+
+      const verifyPass = await checkPassword(
+        password,
+        event.password as string
+      );
+
+      if (!verifyPass) {
+        return res.status(400).json({ message: "Senha incorreta!" });
+      }
+
+      const token = jsonwebtoken.sign(
+        {
+          id: event.uuid_evento,
+        },
+        String(process.env.SECRET),
+        {
+          expiresIn: "1h",
+        }
+      );
+
+      res.status(201).json({ token: token });
+    } catch (error) {
+      console.log(error);
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
+    }
+  }
+
+  public static async verifyEventPrivacy(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      const event = await EventRepository.findEventById(event_id);
+
+      if (!event.isPrivate) {
+        res.status(200).json({ message: "public" });
+      }
+
+      const token = req.headers["event-authorization"] as string;
+
+      if (!token) {
+        return res.status(401).json({ message: "Acesso negado" });
+      }
+
+      jsonwebtoken.verify(
+        token,
+        process.env.SECRET || "",
+        (err: jsonwebtoken.VerifyErrors | null, decoded?: any) => {
+          if (err) {
+            return res.status(401).send({ message: "Token inválido" });
+          }
+
+          res.status(200).json({ message: "permitted" });
+        }
+      );
+    } catch (error) {
       if (error instanceof Error) {
         return res.status(400).json({ message: error.message });
       }

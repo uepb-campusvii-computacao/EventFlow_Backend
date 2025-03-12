@@ -298,6 +298,7 @@ export default class EventRepository {
         uuid_evento: event_id,
       },
       select: {
+        isPrivate: true,
         conteudo: true,
         date: true,
         nome: true,
@@ -327,12 +328,22 @@ export default class EventRepository {
     banner_img_url,
     data,
     conteudo,
+    active,
+    isPrivate,
+    colors,
+    background_img_url,
+    password,
   }: {
     uuid_user_owner: string;
     nome: string;
     banner_img_url?: string;
     data?: Date;
     conteudo: string;
+    active?: boolean;
+    isPrivate?: boolean;
+    colors?: string;
+    background_img_url?: string;
+    password?: string;
   }) {
     const event = await prisma.evento.create({
       data: {
@@ -341,12 +352,27 @@ export default class EventRepository {
         nome,
         banner_img_url,
         date: data,
+        active,
+        isPrivate,
+        colors,
+        background_img_url,
+        password,
         UserEvento: {
           create: {
             perfil: "ORGANIZADOR",
             uuid_user: uuid_user_owner,
           },
         },
+      },
+    });
+
+    return event;
+  }
+
+  static async getEventPassword(event_id: string) {
+    const event = await prisma.evento.findFirst({
+      where: {
+        uuid_evento: event_id,
       },
     });
 

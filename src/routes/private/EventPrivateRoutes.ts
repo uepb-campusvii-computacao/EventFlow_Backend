@@ -6,7 +6,7 @@ import { checkToken } from "../../middlewares/ensureAuthenticate";
 import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
 
 const EventPrivateRoutes = express.Router();
-EventPrivateRoutes.use(checkToken)
+EventPrivateRoutes.use(checkToken);
 
 EventPrivateRoutes.get(
   "/events/:event_id/inscricao/:user_id",
@@ -44,10 +44,7 @@ EventPrivateRoutes.get(
   EventController.getAllFinancialInformationsInEvent
 );
 
-EventPrivateRoutes.post(
-  "/events/create",
-  EventController.createEvent
-);
+EventPrivateRoutes.post("/events/create", EventController.createEvent);
 
 EventPrivateRoutes.post(
   "/events/:event_id/atividades/create",
@@ -56,9 +53,13 @@ EventPrivateRoutes.post(
 );
 
 EventPrivateRoutes.post(
-  "/events/:event_id/verify-password",
-  
+  "/events/:event_id/verify-privacy",
+  EventController.verifyEventPrivacy
+);
 
-)
+EventPrivateRoutes.post(
+  "/events/:event_id/verify-password",
+  EventController.verifyEventPassword
+);
 
 export default EventPrivateRoutes;

@@ -44,18 +44,18 @@ export async function createPaymentUserResgistration(
   const date_of_expirationPix = currentDate.add(5, "minute");
   const date_of_expirationCard = currentDate.add(10, "day");
 
-  const pixBody = {
-   
+
+  const pixBody = () => ({
       transaction_amount: lote.preco,
       description: "Compra de ingresso",
       payment_method_id: "pix",
       date_of_expiration: date_of_expirationPix.toISOString(),
       notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
       payer: {
-        email: user.email,
-    }
-  }
-  const cardBody = {
+        email: user.email
+  }})
+
+  const cardBody =  () => ({
       transaction_amount: lote.preco,
       description: "Compra de ingresso",
       payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
@@ -64,10 +64,11 @@ export async function createPaymentUserResgistration(
       payer: (paymentInfo as PaymentInfo).payer,
       installments: (paymentInfo as PaymentInfo).installments,
       token: (paymentInfo as PaymentInfo).token,
-  }
+  });
 
 
-  const body = paymentInfo ? cardBody : pixBody;
+
+  const body = paymentInfo ? cardBody() : pixBody();
   
   const requestOptions = {
     idempotencyKey: `${user_uuid}-${lote_id}`,

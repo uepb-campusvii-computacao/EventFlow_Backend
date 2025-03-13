@@ -23,9 +23,5 @@ BatchPrivateRoutes.post(
   EventController.registerParticipanteInEvent
 );
 
-BatchPrivateRoutes.post(
-  "/lote/:lote_id/register-multiple",
-  EventController.registerMultipleUsersInEvent
-);
 
 export default BatchPrivateRoutes;

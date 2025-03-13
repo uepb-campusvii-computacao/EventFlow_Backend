@@ -47,7 +47,6 @@ export default class EventController {
       const { atividades, paymentData } = registerUserInEventSchema.parse(
         req.body
       );
-
       const { lote_id } = req.params;
 
       const uuid_user = res.locals.id;

@@ -44,8 +44,8 @@ export async function createPaymentUserResgistration(
   const date_of_expirationPix = currentDate.add(5, "minute");
   const date_of_expirationCard = currentDate.add(10, "day");
 
-  const pixBody = () => {
-    return {
+  const pixBody = {
+   
       transaction_amount: lote.preco,
       description: "Compra de ingresso",
       payment_method_id: "pix",
@@ -53,11 +53,9 @@ export async function createPaymentUserResgistration(
       notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
       payer: {
         email: user.email,
-      },
-    };
-  };
-  const cardBody = () => {
-    return {
+    }
+  }
+  const cardBody = {
       transaction_amount: lote.preco,
       description: "Compra de ingresso",
       payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
@@ -66,10 +64,11 @@ export async function createPaymentUserResgistration(
       payer: (paymentInfo as PaymentInfo).payer,
       installments: (paymentInfo as PaymentInfo).installments,
       token: (paymentInfo as PaymentInfo).token,
-    };
-  };
+  }
 
-  const body = paymentInfo ? cardBody() : pixBody();
+
+  const body = paymentInfo ? cardBody : pixBody;
+  console.log(paymentInfo)
   const requestOptions = {
     idempotencyKey: `${user_uuid}-${lote_id}`,
   };
@@ -153,9 +152,8 @@ export async function createPaymentMultipleUsersResgistration(
       token: (paymentInfo as PaymentInfo).token,
     };
   };
-
+  
   const body = paymentInfo ? cardBody() : pixBody();
-
   const requestOptions = {
     idempotencyKey: `${usersIds.join("-")}-${lote_id}`,
   };

@@ -48,9 +48,7 @@ export async function createPaymentUserResgistration(
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: "pix",
-    date_of_expiration: date_of_expirationPix.format(
-      "YYYY-MM-DD HH:mm:ss.SSSZ-03:00"
-    ),
+    date_of_expiration: "2025-03-15T23:59:59.000-04:00",
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: {
       email: user.email,
@@ -61,9 +59,7 @@ export async function createPaymentUserResgistration(
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
-    date_of_expiration: date_of_expirationCard.format(
-      "YYYY-MM-DD HH:mm:ss.SSSZ-03:00"
-    ),
+    date_of_expiration: "2025-03-15T23:59:59.000-04:00",
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: (paymentInfo as PaymentInfo).payer,
     installments: (paymentInfo as PaymentInfo).installments,

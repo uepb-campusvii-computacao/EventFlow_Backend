@@ -15,7 +15,6 @@ export class UserInscricaoService {
         lote.uuid_evento
       );
 
-    console.log(userGuestSubscriptions);
 
     if (userGuestSubscriptions.length >= 2) {
       throw new Error("Limite de convidados atingido");

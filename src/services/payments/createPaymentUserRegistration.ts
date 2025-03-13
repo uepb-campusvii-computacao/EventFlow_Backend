@@ -68,7 +68,7 @@ export async function createPaymentUserResgistration(
 
 
   const body = paymentInfo ? cardBody : pixBody;
-  console.log(paymentInfo)
+  
   const requestOptions = {
     idempotencyKey: `${user_uuid}-${lote_id}`,
   };

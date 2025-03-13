@@ -41,20 +41,16 @@ export async function createPaymentUserResgistration(
   }
 
   const currentDate = dayjs();
-  const date_of_expirationPix = currentDate
-    .add(15, "minute")
-    .format("yyyy-MM-dd HH:mm:ss.SSSz-03:00");
-  const date_of_expirationCard = currentDate
-    .add(10, "day")
-    .format("yyyy-MM-dd HH:mm:ss.SSSz-03:00");
-
-  console.log({ pix_expiration: date_of_expirationPix });
+  const date_of_expirationPix = currentDate.add(15, "minute");
+  const date_of_expirationCard = currentDate.add(10, "day");
 
   const pixBody = () => ({
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: "pix",
-    date_of_expiration: date_of_expirationPix,
+    date_of_expiration: date_of_expirationPix.format(
+      "YYYY-MM-DD HH:mm:ss.SSSZ-03:00"
+    ),
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: {
       email: user.email,
@@ -65,7 +61,9 @@ export async function createPaymentUserResgistration(
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
-    date_of_expiration: date_of_expirationCard,
+    date_of_expiration: date_of_expirationCard.format(
+      "YYYY-MM-DD HH:mm:ss.SSSZ-03:00"
+    ),
     notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
     payer: (paymentInfo as PaymentInfo).payer,
     installments: (paymentInfo as PaymentInfo).installments,

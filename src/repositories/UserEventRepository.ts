@@ -30,6 +30,21 @@ export default class UserEventRepository {
         throw new Error("Lote não encontrado!");
       }
 
+      if (!existingLote.ativo) {
+        throw new Error("Lote não está ativo!");
+      }
+
+      if (existingLote.inscricoes == existingLote.max_inscricoes - 1) {
+        await tx.lote.update({
+          where: {
+            uuid_lote: lote_id,
+          },
+          data: {
+            ativo: false,
+          },
+        });
+      }
+
       const existingUserEvent = await tx.userEvento.findUnique({
         where: {
           uuid_user_uuid_evento: {

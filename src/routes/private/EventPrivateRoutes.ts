@@ -1,12 +1,13 @@
 import express from "express";
 import ActivityController from "../../controllers/ActivityController";
+import { BatchController } from "../../controllers/BatchController";
 import EventController from "../../controllers/EventController";
 import UserController from "../../controllers/UserController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 import { verifyAdminUserRoleInEvent } from "../../middlewares/verifyUsersRoles";
 
 const EventPrivateRoutes = express.Router();
-EventPrivateRoutes.use(checkToken)
+EventPrivateRoutes.use(checkToken);
 
 EventPrivateRoutes.get(
   "/events/:event_id/inscricao/:user_id",
@@ -44,15 +45,23 @@ EventPrivateRoutes.get(
   EventController.getAllFinancialInformationsInEvent
 );
 
-EventPrivateRoutes.post(
-  "/events/create",
-  EventController.createEvent
-);
+EventPrivateRoutes.post("/events/create", EventController.createEvent);
 
 EventPrivateRoutes.post(
   "/events/:event_id/atividades/create",
   verifyAdminUserRoleInEvent,
   ActivityController.createActivity
+);
+
+EventPrivateRoutes.post(
+  "/events/:event_id/lote/create",
+  verifyAdminUserRoleInEvent,
+  BatchController.createBatch
+);
+
+EventPrivateRoutes.post(
+  "/events/:event_id/verify-password",
+  EventController.verifyEventPassword
 );
 
 export default EventPrivateRoutes;

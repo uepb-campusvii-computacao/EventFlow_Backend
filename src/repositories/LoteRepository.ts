@@ -2,6 +2,36 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
 export default class LoteRepository {
+  public static async createBatch({
+    nome,
+    descricao,
+    preco,
+    max_inscricoes,
+    ativo,
+    uuid_evento,
+  }: {
+    nome: string;
+    descricao: string;
+    preco?: number;
+    max_inscricoes: number;
+    ativo?: boolean;
+    uuid_evento: string;
+  }) {
+    const lote = await prisma.lote.create({
+      data: {
+        nome,
+        descricao,
+        preco: preco || 0,
+        max_inscricoes,
+        ativo,
+        uuid_evento,
+        inscricoes: 0,
+      },
+    });
+
+    return lote;
+  }
+
   static async findLoteById(uuid_lote: string) {
     const lote = await prisma.lote.findUnique({
       where: {
@@ -9,7 +39,7 @@ export default class LoteRepository {
       },
     });
 
-    if(!lote){
+    if (!lote) {
       throw new Error("Lote não encontrado");
     }
 
@@ -20,7 +50,7 @@ export default class LoteRepository {
     const lotes = await prisma.lote.findMany({
       where: {
         uuid_evento: id_evento,
-        ativo: true
+        ativo: true,
       },
     });
 
@@ -30,7 +60,7 @@ export default class LoteRepository {
   static async getAllLotesByEventID(id_evento: string) {
     const lotes = await prisma.lote.findMany({
       where: {
-        uuid_evento: id_evento
+        uuid_evento: id_evento,
       },
     });
 
@@ -39,7 +69,7 @@ export default class LoteRepository {
 
   static async toggleLoteAtivo(lote_id: string): Promise<void> {
     const lote = await prisma.lote.findUnique({
-      where: { uuid_lote: lote_id }
+      where: { uuid_lote: lote_id },
     });
 
     if (!lote) {
@@ -48,7 +78,7 @@ export default class LoteRepository {
 
     await prisma.lote.update({
       where: { uuid_lote: lote_id },
-      data: { ativo: !lote.ativo }
+      data: { ativo: !lote.ativo },
     });
   }
 

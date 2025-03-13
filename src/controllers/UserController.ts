@@ -15,10 +15,12 @@ import { sendPasswordResetEmail } from "../services/emailService";
 import {
   getPayment,
   getPaymentStatusForInscricao,
+  getPaymentStatusForMultipleSubscriptions,
 } from "../services/payments/getPayment";
 import { checkPassword } from "../services/user/checkPassword";
 import { deleteUserByUserId } from "../services/user/deleteUserByUserId";
 import { encryptPassword } from "../services/user/encryptPassword";
+import { UserService } from "../services/user/user.service";
 
 export default class UserController {
   static async loginUser(req: Request, res: Response) {
@@ -60,6 +62,9 @@ export default class UserController {
       const registerUserSchema = z
         .object({
           name: z.string(),
+          cpf: z
+            .string()
+            .length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
           email: z.string().email("Email com formato inválido"),
           nickname: z.string(),
           organization: z.string(),
@@ -73,13 +78,14 @@ export default class UserController {
           path: ["confirm_password"],
         });
 
-      const { name, email, nickname, password, organization } =
+      const { name, cpf, email, nickname, password, organization } =
         registerUserSchema.parse(req.body);
 
       const password_encrypted = await encryptPassword(password);
 
       const user = await UserRepository.createUser({
         nome: name,
+        cpf: cpf,
         nome_cracha: nickname,
         senha: password_encrypted,
         email: email,
@@ -87,6 +93,47 @@ export default class UserController {
       });
 
       return res.status(201).json(user);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "Um erro inesperado aconteceu", error: error });
+    }
+  }
+
+  static async registerGuest(req: Request, res: Response) {
+    try {
+      const registerGuestSchema = z.object({
+        name: z.string(),
+        cpf: z.string().length(14, "CPF deve conter o formato xxx.xxx.xxx-xx"),
+        email: z.string().email(),
+        nickname: z.string(),
+        organization: z.string(),
+      });
+
+      const { name, cpf, email, nickname, organization } =
+        registerGuestSchema.parse(req.body);
+
+      const guest = await UserService.registerGuest({
+        name,
+        cpf,
+        email,
+        nickname,
+        organization,
+      });
+
+      return res.status(201).json(guest);
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -147,6 +194,59 @@ export default class UserController {
           );
         }
       }
+      return res.status(200).send("Valor alterado");
+    } catch (error) {
+      return res.status(400).send("Informações inválidas");
+    }
+  }
+
+  static async realizarPagamentoMultipleUsers(req: Request, res: Response) {
+    try {
+      const { lote_id, users_ids } = req.params;
+      const { action } = req.body;
+
+      const usersIdsSplitted = users_ids.split(";");
+      const payerId = usersIdsSplitted[usersIdsSplitted.length - 1];
+
+      if (action === "payment.updated") {
+        const statusPromise = getPaymentStatusForMultipleSubscriptions(
+          payerId,
+          lote_id
+        );
+        const usersSubscriptionsPromise = prisma.userInscricao.findMany({
+          where: {
+            uuid_lote: lote_id,
+            usuario: {
+              uuid_user: { in: usersIdsSplitted },
+            },
+          },
+        });
+
+        const [status, usersSubscriptions] = await Promise.all([
+          statusPromise,
+          usersSubscriptionsPromise,
+        ]);
+
+        if (usersSubscriptions.length !== usersIdsSplitted.length) {
+          throw new Error("One or more users not found");
+        }
+
+        if (
+          status &&
+          usersSubscriptions.every(
+            (user) => user.status_pagamento !== StatusPagamento.GRATUITO
+          )
+        ) {
+          await prisma.userInscricao.updateMany({
+            where: {
+              uuid_lote: lote_id,
+              usuario: { uuid_user: { in: usersIdsSplitted } },
+            },
+            data: { status_pagamento: status },
+          });
+        }
+      }
+
       return res.status(200).send("Valor alterado");
     } catch (error) {
       return res.status(400).send("Informações inválidas");
@@ -320,40 +420,42 @@ export default class UserController {
     try {
       const { id } = res.locals;
 
-      const user = await UserRepository.findUserById(id)
+      const user = await UserRepository.findUserById(id);
 
       const { uuid_user: _, senha, ...userWithoutSensitiveData } = user;
-  
+
       res.status(200).json(userWithoutSensitiveData);
     } catch (error) {
       res.status(400).send(error);
     }
   }
 
-  static async requestPasswordReset(req: Request, res: Response){
+  static async requestPasswordReset(req: Request, res: Response) {
     try {
       const requestPasswordResetSchema = z.object({
         email: z.string().email("Email com formato inválido"),
       });
-  
+
       const { email } = requestPasswordResetSchema.parse(req.body);
-  
+
       const user = await UserRepository.findUserByEmail(email);
       if (!user) {
-        return res.status(404).json({ message: 'Usuário não encontrado' });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
-  
+
       const token = crypto.randomUUID();
       await UserRepository.updateUserRecoverInfo(
         email,
         token,
         new Date(Date.now() + 3600000)
       );
-  
+
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
       await sendPasswordResetEmail(email, resetUrl);
-  
-      return res.status(200).json({ message: 'E-mail de recuperação de senha enviado!' });
+
+      return res
+        .status(200)
+        .json({ message: "E-mail de recuperação de senha enviado!" });
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -362,30 +464,34 @@ export default class UserController {
         }));
         return res.status(400).json(formattedErrors);
       }
-  
-      return res.status(500).json({ message: "Um erro inesperado aconteceu.", error: error });
+
+      return res
+        .status(500)
+        .json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
-  
-  static async resetPassword(req: Request, res: Response){
+
+  static async resetPassword(req: Request, res: Response) {
     try {
       const resetPasswordSchema = z.object({
         token: z.string(),
-        newPassword: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
+        newPassword: z
+          .string()
+          .min(8, "A senha precisa ter pelo menos 8 caracteres"),
       });
-  
+
       const { token, newPassword } = resetPasswordSchema.parse(req.body);
-  
+
       const user = await UserRepository.findUserByToken(token);
       if (!user) {
-        return res.status(400).json({ message: 'Token inválido ou expirado' });
+        return res.status(400).json({ message: "Token inválido ou expirado" });
       }
-  
+
       const hashedPassword = await encryptPassword(newPassword);
-  
+
       await UserRepository.updateUserPassword(user.email, hashedPassword);
-  
-      return res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+
+      return res.status(200).json({ message: "Senha redefinida com sucesso!" });
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({
@@ -394,8 +500,10 @@ export default class UserController {
         }));
         return res.status(400).json(formattedErrors);
       }
-  
-      return res.status(500).json({ message: "Um erro inesperado aconteceu.", error: error });
+
+      return res
+        .status(500)
+        .json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
 }

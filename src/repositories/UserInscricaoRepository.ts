@@ -17,6 +17,7 @@ export default class UserInscricaoRepository {
     tx: Prisma.TransactionClient,
     user_uuid: string,
     lote_id: string,
+    payer_id: string,
     payment_id?: string,
     expiration_date?: string,
     status_pagamento?: StatusPagamento
@@ -25,6 +26,7 @@ export default class UserInscricaoRepository {
       data: {
         uuid_user: user_uuid,
         uuid_lote: lote_id,
+        uuid_payer: payer_id,
         id_payment_mercado_pago: payment_id || null,
         expiration_datetime: expiration_date || null,
         status_pagamento: status_pagamento,
@@ -32,23 +34,36 @@ export default class UserInscricaoRepository {
     });
   }
 
+  public static async createManyUsersSubscriptions(
+    tx: Prisma.TransactionClient,
+    usersIds: string[],
+    lote_id: string,
+    payer_id: string,
+    payment_id?: string,
+    expiration_date?: string,
+    status_pagamento?: StatusPagamento
+  ) {
+    const usersSubscriptions = await tx.userInscricao.createMany({
+      data: usersIds.map((user_id) => ({
+        uuid_user: user_id,
+        uuid_lote: lote_id,
+        uuid_payer: payer_id,
+        id_payment_mercado_pago: payment_id || null,
+        expiration_datetime: expiration_date || null,
+        status_pagamento: status_pagamento,
+      })),
+    });
+
+    return usersSubscriptions;
+  }
+
   static async findUserInscriptionByEventId(user_id: string, event_id: string) {
     try {
-      const lote = await prisma.lote.findFirst({
+      const userInscription = await prisma.userInscricao.findFirst({
         where: {
-          uuid_evento: event_id,
-        },
-      });
-
-      if (!lote) {
-        return null;
-      }
-
-      const userInscription = await prisma.userInscricao.findUnique({
-        where: {
-          uuid_lote_uuid_user: {
-            uuid_lote: lote.uuid_lote,
-            uuid_user: user_id,
+          uuid_user: user_id,
+          lote: {
+            uuid_evento: event_id,
           },
         },
         include: {
@@ -62,6 +77,26 @@ export default class UserInscricaoRepository {
       console.error("Erro ao buscar inscrição do usuário:", error);
       throw error;
     }
+  }
+
+  static async findUserGuestSubscriptions(user_id: string, event_id: string) {
+    const userSubscriptions = await prisma.userInscricao.findMany({
+      where: {
+        NOT: [
+          {
+            uuid_user: user_id,
+          },
+        ],
+        uuid_payer: user_id,
+        AND: {
+          lote: {
+            uuid_evento: event_id,
+          },
+        },
+      },
+    });
+
+    return userSubscriptions;
   }
 
   static async findLoteIdAndUserIdByEmail(event_id: string, email: string) {
@@ -145,6 +180,26 @@ export default class UserInscricaoRepository {
             uuid_user: userId,
             uuid_lote: loteId,
           },
+        },
+      });
+      return inscricao;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public static async findUserSubscriptionByPayerAndLote(
+    payerId: string,
+    loteId: string
+  ) {
+    try {
+      const inscricao = await prisma.userInscricao.findUnique({
+        where: {
+          uuid_lote_uuid_user: {
+            uuid_lote: loteId,
+            uuid_user: payerId,
+          },
+          uuid_payer: payerId,
         },
       });
       return inscricao;

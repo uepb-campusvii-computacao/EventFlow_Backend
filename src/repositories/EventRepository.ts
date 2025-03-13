@@ -2,7 +2,11 @@ import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
-import { createPaymentUserResgistration } from "../services/payments/createPaymentUserRegistration";
+import {
+  createPaymentMultipleUsersResgistration,
+  createPaymentUserResgistration,
+  PaymentInfo,
+} from "../services/payments/createPaymentUserRegistration";
 import LoteRepository from "./LoteRepository";
 import UserAtividadeRepository from "./UserAtividadeRepository";
 import UserInscricaoRepository from "./UserInscricaoRepository";
@@ -14,22 +18,25 @@ export default class EventRepository {
       user_id,
       lote_id,
       atividades,
+      paymentInfo,
     }: {
       user_id: string;
       lote_id: string;
-      atividades: RegisterParticipanteParams["atividades"];
+      atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
     }
   ) {
     const lote = await LoteRepository.findLoteById(lote_id);
 
     if (lote.preco > 0) {
       const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, user_id, lote_id);
+        await createPaymentUserResgistration(tx, user_id, lote_id, paymentInfo);
 
       await UserInscricaoRepository.createUserInscricao(
         tx,
         user_id,
         lote_id,
+        user_id,
         payment_id,
         expiration_date
       );
@@ -38,17 +45,136 @@ export default class EventRepository {
         tx,
         user_id,
         lote_id,
+        user_id,
         "",
         "",
         "GRATUITO"
       );
     }
 
-    await UserAtividadeRepository.registerUserInActivities(
-      tx,
-      user_id,
-      atividades
-    );
+    if (atividades) {
+      await UserAtividadeRepository.registerUserInActivities(
+        tx,
+        user_id,
+        atividades
+      );
+    }
+  }
+
+  static async registerGuest(
+    tx: Prisma.TransactionClient,
+    {
+      guest_id,
+      payer_id,
+      lote_id,
+      atividades,
+      paymentInfo,
+    }: {
+      guest_id: string;
+      payer_id: string;
+      lote_id: string;
+      atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
+    }
+  ) {
+    const lote = await LoteRepository.findLoteById(lote_id);
+
+    if (lote.preco > 0) {
+      const { payment_id, expiration_date } =
+        await createPaymentUserResgistration(
+          tx,
+          guest_id,
+          lote_id,
+          paymentInfo
+        );
+
+      await UserInscricaoRepository.createUserInscricao(
+        tx,
+        guest_id,
+        lote_id,
+        payer_id,
+        payment_id,
+        expiration_date
+      );
+    } else {
+      await UserInscricaoRepository.createUserInscricao(
+        tx,
+        guest_id,
+        lote_id,
+        payer_id,
+        "",
+        "",
+        "GRATUITO"
+      );
+    }
+
+    if (atividades) {
+      await UserAtividadeRepository.registerUserInActivities(
+        tx,
+        guest_id,
+        atividades
+      );
+    }
+  }
+
+  static async registerMultipleUsers(
+    tx: Prisma.TransactionClient,
+    {
+      usersIds,
+      payerId,
+      loteId,
+      atividades,
+      paymentInfo,
+    }: {
+      usersIds: string[];
+      payerId: string;
+      loteId: string;
+      atividades?: RegisterParticipanteParams["atividades"];
+      paymentInfo?: PaymentInfo;
+    }
+  ) {
+    const lote = await LoteRepository.findLoteById(loteId);
+
+    if (lote.preco > 0) {
+      const { payment_id, expiration_date } =
+        await createPaymentMultipleUsersResgistration(
+          tx,
+          usersIds,
+          loteId,
+          paymentInfo
+        );
+
+      await UserInscricaoRepository.createManyUsersSubscriptions(
+        tx,
+        usersIds,
+        loteId,
+        payerId,
+        payment_id,
+        expiration_date
+      );
+    } else {
+      await UserInscricaoRepository.createManyUsersSubscriptions(
+        tx,
+        usersIds,
+        loteId,
+        payerId,
+        "",
+        "",
+        "GRATUITO"
+      );
+    }
+
+    if (atividades) {
+      await Promise.all(
+        usersIds.map(async (guestId) => {
+          await UserAtividadeRepository.registerUserInActivities(
+            tx,
+            guestId,
+            atividades
+          );
+        })
+      );
+    }
   }
 
   static async findAllActivitiesInEvent(uuid_evento: string) {
@@ -85,9 +211,9 @@ export default class EventRepository {
         uuid_user,
         AND: {
           atividade: {
-            uuid_evento
-          }
-        }
+            uuid_evento,
+          },
+        },
       },
       select: {
         atividade: {
@@ -172,6 +298,7 @@ export default class EventRepository {
         uuid_evento: event_id,
       },
       select: {
+        isPrivate: true,
         conteudo: true,
         date: true,
         nome: true,
@@ -201,12 +328,22 @@ export default class EventRepository {
     banner_img_url,
     data,
     conteudo,
+    active,
+    isPrivate,
+    colors,
+    background_img_url,
+    password,
   }: {
     uuid_user_owner: string;
     nome: string;
     banner_img_url?: string;
     data?: Date;
     conteudo: string;
+    active?: boolean;
+    isPrivate?: boolean;
+    colors?: string;
+    background_img_url?: string;
+    password?: string;
   }) {
     const event = await prisma.evento.create({
       data: {
@@ -215,12 +352,27 @@ export default class EventRepository {
         nome,
         banner_img_url,
         date: data,
+        active,
+        isPrivate,
+        colors,
+        background_img_url,
+        password,
         UserEvento: {
           create: {
             perfil: "ORGANIZADOR",
             uuid_user: uuid_user_owner,
           },
         },
+      },
+    });
+
+    return event;
+  }
+
+  static async getEventPassword(event_id: string) {
+    const event = await prisma.evento.findFirst({
+      where: {
+        uuid_evento: event_id,
       },
     });
 

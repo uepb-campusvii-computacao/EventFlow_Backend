@@ -14,6 +14,11 @@ BatchPublicRoutes.post(
   UserController.realizarPagamento
 );
 
+BatchPublicRoutes.post(
+  "/lote/:lote_id/mutiple-users/:users_ids/realizar-pagamento",
+  UserController.realizarPagamentoMultipleUsers
+);
+
 BatchPublicRoutes.put(
   "/lote/:lote_id/change_inscricoes_visibility",
   EventController.toggleLoteAtivo

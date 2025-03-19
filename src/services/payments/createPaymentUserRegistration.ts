@@ -45,6 +45,23 @@ export async function createPaymentUserResgistration(
   const date_of_expirationCard = currentDate.add(10, "day");
 
   const pixBody = () => ({
+    additional_info: {
+      items: [
+        {
+          id: lote.uuid_lote,
+          title: lote.nome,
+          category_id: "tickets",
+          description: lote.descricao ?? undefined,
+          quantity: 1,
+          unit_price: lote.preco,
+          currency_id: "BRL",
+        },
+      ],
+      payer: {
+        first_name: user.nome,
+        last_name: user.nome.split(" ")[0],
+      }
+    },
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: "pix",
@@ -56,6 +73,23 @@ export async function createPaymentUserResgistration(
   });
 
   const cardBody = () => ({
+    additional_info: {
+      items: [
+        {
+          id: lote.uuid_lote,
+          title: lote.nome,
+          category_id: "tickets",
+          description: lote.descricao ?? undefined,
+          quantity: 1,
+          unit_price: lote.preco,
+          currency_id: "BRL",
+        },
+      ],
+      payer: {
+        first_name: user.nome,
+        last_name: user.nome.split(" ")[0],
+      }
+    },
     transaction_amount: lote.preco,
     description: "Compra de ingresso",
     payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,

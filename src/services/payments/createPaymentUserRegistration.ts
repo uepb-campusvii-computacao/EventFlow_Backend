@@ -41,35 +41,67 @@ export async function createPaymentUserResgistration(
   }
 
   const currentDate = dayjs();
-  const date_of_expirationPix = currentDate.add(5, "minute");
-  const date_of_expirationCard = currentDate.add(10, "day");
-
+  const date_of_expirationPix = currentDate.add(15, "minute").format("YYYY-MM-DDTHH:mm:ss.000-03:00");
+  const date_of_expirationCard = currentDate.add(10, "day").format("YYYY-MM-DDTHH:mm:ss.000-03:00");
+  const pix_price = parseFloat((lote.preco + (lote.preco * 0.0099)).toFixed(2));
+  const card_price = parseFloat((lote.preco + (lote.preco * 0.0498)).toFixed(2));
 
   const pixBody = () => ({
-      transaction_amount: lote.preco,
-      description: "Compra de ingresso",
-      payment_method_id: "pix",
-      date_of_expiration: date_of_expirationPix.toISOString(),
-      notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
+    additional_info: {
+      items: [
+        {
+          id: lote.uuid_lote,
+          title: lote.nome,
+          category_id: "tickets",
+          description: lote.descricao ?? undefined,
+          quantity: 1,
+          unit_price: pix_price,
+        },
+      ],
       payer: {
-        email: user.email
-  }})
-
-  const cardBody =  () => ({
-      transaction_amount: lote.preco,
-      description: "Compra de ingresso",
-      payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
-      date_of_expiration: date_of_expirationCard.toISOString(),
-      notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
-      payer: (paymentInfo as PaymentInfo).payer,
-      installments: (paymentInfo as PaymentInfo).installments,
-      token: (paymentInfo as PaymentInfo).token,
+        first_name: user.nome,
+        last_name: user.nome.split(" ")[0],
+      }
+    },
+    transaction_amount: pix_price,
+    description: "Compra de ingresso",
+    payment_method_id: "pix",
+    date_of_expiration: date_of_expirationPix,
+    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/paymentUpdatePix`,
+    payer: {
+      email: user.email,
+    },
   });
 
-
+  const cardBody = () => ({
+    additional_info: {
+      items: [
+        {
+          id: lote.uuid_lote,
+          title: lote.nome,
+          category_id: "tickets",
+          description: lote.descricao ?? undefined,
+          quantity: 1,
+          unit_price: card_price,
+        },
+      ],
+      payer: {
+        first_name: user.nome,
+        last_name: user.nome.split(" ")[0],
+      }
+    },
+    transaction_amount: card_price,
+    description: "Compra de ingresso",
+    payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
+    date_of_expiration: date_of_expirationCard,
+    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/payment/card`,
+    payer: (paymentInfo as PaymentInfo).payer,
+    installments: (paymentInfo as PaymentInfo).installments,
+    token: (paymentInfo as PaymentInfo).token,
+  });
 
   const body = paymentInfo ? cardBody() : pixBody();
-  
+
   const requestOptions = {
     idempotencyKey: `${user_uuid}-${lote_id}`,
   };
@@ -153,7 +185,7 @@ export async function createPaymentMultipleUsersResgistration(
       token: (paymentInfo as PaymentInfo).token,
     };
   };
-  
+
   const body = paymentInfo ? cardBody() : pixBody();
   const requestOptions = {
     idempotencyKey: `${usersIds.join("-")}-${lote_id}`,

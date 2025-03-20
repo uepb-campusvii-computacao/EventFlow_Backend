@@ -4,7 +4,6 @@ import jsonwebtoken from "jsonwebtoken";
 import { FindLoteIdAnduserIdParams } from "../interfaces/findLoteIdAnduserIdParams";
 import { UpdatePaymentStatusParams } from "../interfaces/updatePaymentStatusParams";
 import { UserLoginParams } from "../interfaces/userLoginParams";
-
 import { z, ZodError } from "zod";
 import { prisma } from "../lib/prisma";
 import LoteRepository from "../repositories/LoteRepository";
@@ -13,7 +12,6 @@ import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import UserRepository from "../repositories/UserRepository";
 import { sendPasswordResetEmail } from "../services/emailService";
 import {
-  getPayment,
   getPaymentStatusForInscricao,
   getPaymentStatusForMultipleSubscriptions,
 } from "../services/payments/getPayment";
@@ -23,6 +21,7 @@ import { encryptPassword } from "../services/user/encryptPassword";
 import { UserService } from "../services/user/user.service";
 
 export default class UserController {
+  
   static async loginUser(req: Request, res: Response) {
     const params: UserLoginParams = req.body;
 
@@ -173,24 +172,54 @@ export default class UserController {
     }
   }
 
-  static async realizarPagamento(req: Request, res: Response) {
+  static async paymentUpdatePix(req: Request, res: Response) {
     try {
       const { lote_id, user_id } = req.params;
       const { action } = req.body;
       if (action === "payment.updated") {
-        const [status, user_inscricao] = await Promise.all([
+        const [res, user_inscricao] = await Promise.all([
           getPaymentStatusForInscricao(user_id, lote_id),
           UserInscricaoRepository.findUserInscricaoById(user_id, lote_id),
         ]);
 
         if (
-          status &&
+          res.status &&
           user_inscricao?.status_pagamento !== StatusPagamento.GRATUITO
         ) {
-          await UserInscricaoRepository.changeStatusPagamento(
+          await UserInscricaoRepository.changeStatusPagamentoPix(
             user_id,
             lote_id,
-            status
+            res.status
+          );
+        }
+      }
+      return res.status(200).send("Valor alterado");
+    } catch (error) {
+      return res.status(400).send("Informações inválidas");
+    }
+  }
+  static async paymentUpdateCard(req: Request, res: Response) {
+    try {
+      const { lote_id, user_id } = req.params;
+      const { action } = req.body;
+      if (action === "payment.updated") {
+        const [res, user_inscricao] = await Promise.all([
+          getPaymentStatusForInscricao(user_id, lote_id),
+          UserInscricaoRepository.findUserInscricaoById(user_id, lote_id),
+        ]);
+
+        if (
+          //isso ta feito: refatore isso
+          res.status && res.status_detail && res.payment_type_id && res.last_four_digits &&
+          user_inscricao?.status_pagamento !== StatusPagamento.GRATUITO
+        ) {
+          await UserInscricaoRepository.changeStatusPagamentoCard(
+            user_id,
+            lote_id,
+            res.status,
+            res.status_detail,
+            res.payment_type_id,
+            res.last_four_digits
           );
         }
       }
@@ -289,27 +318,6 @@ export default class UserController {
     }
   }
 
-  static async getUserInscricao(req: Request, res: Response) {
-    try {
-      const { user_id, lote_id } = req.params;
-
-      const user_inscricao =
-        await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
-
-      if (user_inscricao?.id_payment_mercado_pago) {
-        const payment = await getPayment(
-          user_inscricao!.id_payment_mercado_pago
-        );
-
-        return res.status(200).json(payment);
-      }
-
-      return res.status(200).json({ message: "Inscrição Gratuita" });
-    } catch (error) {
-      return res.status(400).send(error);
-    }
-  }
-
   static async getUserInEvent(req: Request, res: Response) {
     try {
       const { event_id, user_id } = req.params;
@@ -352,7 +360,7 @@ export default class UserController {
       const { lote_id, user_id } = req.params;
       const { status_pagamento }: UpdatePaymentStatusParams = req.body;
 
-      await UserInscricaoRepository.changeStatusPagamento(
+      await UserInscricaoRepository.changeStatusPagamentoPix(
         lote_id,
         user_id,
         status_pagamento
@@ -376,45 +384,6 @@ export default class UserController {
     }
   }
 
-  static async findAllUserInscricao(req: Request, res: Response) {
-    try {
-      const { lote_id } = req.params;
-
-      const user_inscricao = await prisma.userInscricao.findMany({
-        where: {
-          uuid_lote: lote_id,
-          AND: {
-            status_pagamento: "PENDENTE",
-          },
-        },
-        select: {
-          status_pagamento: true,
-          usuario: {
-            select: {
-              nome: true,
-              email: true,
-            },
-          },
-          id_payment_mercado_pago: true,
-        },
-      });
-
-      const pagamentos = [];
-
-      for (const item of user_inscricao) {
-        if (item.id_payment_mercado_pago) {
-          const pagamento = await getPayment(item.id_payment_mercado_pago);
-          pagamentos.push(item, pagamento);
-        }
-      }
-
-      res.status(200).json({
-        pagamentos,
-      });
-    } catch (error) {
-      res.status(400).send(error);
-    }
-  }
 
   static async findUser(req: Request, res: Response) {
     try {
@@ -507,3 +476,66 @@ export default class UserController {
     }
   }
 }
+
+
+  // static async getUserInscricao(req: Request, res: Response) {
+  //   try {
+  //     const { user_id, lote_id } = req.params;
+
+  //     const user_inscricao =
+  //       await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
+
+  //     if (user_inscricao?.id_payment_mercado_pago) {
+  //       const payment = await getPayment(
+  //         user_inscricao!.id_payment_mercado_pago
+  //       );
+
+  //       return res.status(200).json(payment);
+  //     }
+
+  //     return res.status(200).json({ message: "Inscrição Gratuita" });
+  //   } catch (error) {
+  //     return res.status(400).send(error);
+  //   }
+  // }
+
+
+ // static async findAllUserInscricao(req: Request, res: Response) {
+  //   try {
+  //     const { lote_id } = req.params;
+
+  //     const user_inscricao = await prisma.userInscricao.findMany({
+  //       where: {
+  //         uuid_lote: lote_id,
+  //         AND: {
+  //           status_pagamento: "PENDENTE",
+  //         },
+  //       },
+  //       select: {
+  //         status_pagamento: true,
+  //         usuario: {
+  //           select: {
+  //             nome: true,
+  //             email: true,
+  //           },
+  //         },
+  //         id_payment_mercado_pago: true,
+  //       },
+  //     });
+
+  //     const pagamentos = [];
+
+  //     for (const item of user_inscricao) {
+  //       if (item.id_payment_mercado_pago) {
+  //         const pagamento = await getPayment(item.id_payment_mercado_pago);
+  //         pagamentos.push(item, pagamento);
+  //       }
+  //     }
+
+  //     res.status(200).json({
+  //       pagamentos,
+  //     });
+  //   } catch (error) {
+  //     res.status(400).send(error);
+  //   }
+  // }

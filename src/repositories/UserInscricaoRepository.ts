@@ -208,7 +208,7 @@ export default class UserInscricaoRepository {
     }
   }
 
-  static async changeStatusPagamento(
+  static async changeStatusPagamentoPix(
     uuid_user: string,
     uuid_lote: string,
     status_pagamento: StatusPagamento
@@ -222,6 +222,29 @@ export default class UserInscricaoRepository {
       },
       data: {
         status_pagamento,
+      },
+    });
+  }
+  static async changeStatusPagamentoCard(
+    uuid_user: string,
+    uuid_lote: string,
+    status_pagamento: StatusPagamento,
+    status_detail: string,
+    payment_method: string,
+    last_four_digits: string,
+  ) {
+    await prisma.userInscricao.update({
+      where: {
+        uuid_lote_uuid_user: {
+          uuid_user,
+          uuid_lote,
+        },
+      },
+      data: {
+        status_pagamento,
+        status_detail,
+        payment_method,
+        last_four_digits,
       },
     });
   }

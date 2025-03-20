@@ -200,6 +200,7 @@ export default class UserController {
     }
   }
   static async paymentUpdateCard(req: Request, res: Response) {
+    console.log("Requisitando pagamento do cartão de crédito...")
     try {
       const { lote_id, user_id } = req.params;
       const { action } = req.body;
@@ -208,9 +209,9 @@ export default class UserController {
           getPaymentStatusForInscricao(user_id, lote_id),
           UserInscricaoRepository.findUserInscricaoById(user_id, lote_id),
         ]);
-
+        console.log(`Pagamento atualizado: ${res}`)
         if (
-          //isso ta feito: refatore isso
+          //isso ta feio: refatore isso
           res.status && res.status_detail && res.payment_type_id && res.last_four_digits &&
           user_inscricao?.status_pagamento !== StatusPagamento.GRATUITO
         ) {

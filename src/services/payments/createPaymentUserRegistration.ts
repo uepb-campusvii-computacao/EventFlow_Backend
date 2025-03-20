@@ -41,26 +41,60 @@ export async function createPaymentUserResgistration(
   }
 
   const currentDate = dayjs();
-  const date_of_expirationPix = currentDate.add(15, "minute");
-  const date_of_expirationCard = currentDate.add(10, "day");
+  const date_of_expirationPix = currentDate.add(15, "minute").format("YYYY-MM-DDTHH:mm:ss.000-03:00");
+  const date_of_expirationCard = currentDate.add(10, "day").format("YYYY-MM-DDTHH:mm:ss.000-03:00");
+  const pix_price = parseFloat((lote.preco + (lote.preco * 0.0099)).toFixed(2));
+  const card_price = parseFloat((lote.preco + (lote.preco * 0.0498)).toFixed(2));
 
   const pixBody = () => ({
-    transaction_amount: lote.preco,
+    additional_info: {
+      items: [
+        {
+          id: lote.uuid_lote,
+          title: lote.nome,
+          category_id: "tickets",
+          description: lote.descricao ?? undefined,
+          quantity: 1,
+          unit_price: pix_price,
+        },
+      ],
+      payer: {
+        first_name: user.nome,
+        last_name: user.nome.split(" ")[0],
+      }
+    },
+    transaction_amount: pix_price,
     description: "Compra de ingresso",
     payment_method_id: "pix",
-    date_of_expiration: "2025-03-17T23:59:59.000-04:00",
-    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
+    date_of_expiration: date_of_expirationPix,
+    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/payment/updateStatusPix`,
     payer: {
       email: user.email,
     },
   });
 
   const cardBody = () => ({
-    transaction_amount: lote.preco,
+    additional_info: {
+      items: [
+        {
+          id: lote.uuid_lote,
+          title: lote.nome,
+          category_id: "tickets",
+          description: lote.descricao ?? undefined,
+          quantity: 1,
+          unit_price: card_price,
+        },
+      ],
+      payer: {
+        first_name: user.nome,
+        last_name: user.nome.split(" ")[0],
+      }
+    },
+    transaction_amount: card_price,
     description: "Compra de ingresso",
     payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
-    date_of_expiration: "2025-03-17T23:59:59.000-04:00",
-    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/realizar-pagamento`,
+    date_of_expiration: date_of_expirationCard,
+    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/payment/updateStatusCard`,
     payer: (paymentInfo as PaymentInfo).payer,
     installments: (paymentInfo as PaymentInfo).installments,
     token: (paymentInfo as PaymentInfo).token,

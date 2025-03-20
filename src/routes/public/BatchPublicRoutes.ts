@@ -10,8 +10,13 @@ BatchPublicRoutes.get(
 );
 
 BatchPublicRoutes.post(
-  "/lote/:lote_id/user/:user_id/realizar-pagamento",
-  UserController.realizarPagamento
+  "/lote/:lote_id/user/:user_id/payment/updateStatusPix",
+  UserController.paymentUpdatePix
+);
+
+BatchPublicRoutes.post(
+  "/lote/:lote_id/user/:user_id/payment/updateStatusCard",
+  UserController.paymentUpdateCard
 );
 
 BatchPublicRoutes.post(

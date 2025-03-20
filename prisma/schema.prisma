@@ -104,7 +104,7 @@ model UserAtividade {
     presenca       Boolean   @default(false)
     user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
     atividade      Atividade @relation(fields: [uuid_atividade], references: [uuid_atividade])
-
+    
     @@id([uuid_user, uuid_atividade])
     @@map("tb_usuario_atividade")
 }
@@ -116,6 +116,9 @@ model UserInscricao {
     credenciamento          Boolean         @default(false)
     id_payment_mercado_pago String?
     expiration_datetime     DateTime?
+    status_detail           String?
+    payment_method          String?
+    last_four_digits        String?
     status_pagamento        StatusPagamento @default(PENDENTE)
     usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
     lote                    Lote            @relation(fields: [uuid_lote], references: [uuid_lote])
@@ -181,7 +184,9 @@ enum TipoAtividade {
 
 enum StatusPagamento {
     PENDENTE
+    PROCESSANDO
     REALIZADO
-    EXPIRADO
+    CANCELADO
+    REJEITADO
     GRATUITO
 }

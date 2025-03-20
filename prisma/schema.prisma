@@ -110,6 +110,7 @@ model UserAtividade {
 }
 
 model UserInscricao {
+    uuid_userInscricao      String?         @default(uuid())
     uuid_user               String
     uuid_lote               String
     uuid_payer              String

@@ -16,6 +16,70 @@ import { encryptPassword } from "../services/user/encryptPassword";
 import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
 
 export default class EventController {
+  static async createNewPayment(req: Request, res: Response) {
+    try {
+      const registerUserInEventSchema = z.object({
+        atividades: z
+          .array(
+            z.object({
+              atividade_id: z.string(),
+            })
+          )
+          .optional(),
+        paymentData: z
+          .object({
+            token: z.string(),
+            issuer_id: z.string(),
+            payment_method_id: z.string(),
+            transaction_amount: z.number(),
+            installments: z.number(),
+            payer: z.object({
+              email: z.string(),
+              identification: z.object({
+                type: z.string(),
+                number: z.string(),
+              }),
+            }),
+          })
+          .optional(),
+      });
+
+      const { atividades, paymentData } = registerUserInEventSchema.parse(
+        req.body
+      );
+      const { lote_id } = req.params;
+
+      const uuid_user = res.locals.id;
+
+      const perfil: Perfil = "PARTICIPANTE";
+      await UserEventRepository.createNewPayment({
+        uuid_user,
+        lote_id,
+        perfil,
+        atividades,
+        paymentInfo: paymentData,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Novo pagamento criado com sucesso!" });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        return res.status(400).json(formattedErrors);
+      }
+
+      if (error instanceof Error) {
+        return res.status(400).send(error.message);
+      } else {
+        return res.status(400).json(error);
+      }
+    }
+  }
+
   static async registerParticipanteInEvent(req: Request, res: Response) {
     try {
       const registerUserInEventSchema = z.object({

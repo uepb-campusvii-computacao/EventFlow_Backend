@@ -205,7 +205,7 @@ export default class UserController {
       const { lote_id, user_id } = req.params;
       const { action } = req.body;
       console.log(action)
-      if (action === "payment.created") {
+      if (action === "payment.created" || action === "payment.updated") {
         const [res, user_inscricao] = await Promise.all([
           getPaymentStatusForInscricao(user_id, lote_id),
           UserInscricaoRepository.findUserInscricaoById(user_id, lote_id),

@@ -12,6 +12,7 @@ import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import UserRepository from "../repositories/UserRepository";
 import { sendPasswordResetEmail } from "../services/emailService";
 import {
+  getPayment,
   getPaymentStatusForInscricao,
   getPaymentStatusForMultipleSubscriptions,
 } from "../services/payments/getPayment";
@@ -475,67 +476,66 @@ export default class UserController {
         .json({ message: "Um erro inesperado aconteceu.", error: error });
     }
   }
+  //gerenciador de inscrições
+  static async findAllUserInscricao(req: Request, res: Response) {
+    try {
+      const { lote_id } = req.params;
+
+      const user_inscricao = await prisma.userInscricao.findMany({
+        where: {
+          uuid_lote: lote_id,
+          AND: {
+            status_pagamento: "PENDENTE",
+          },
+        },
+        select: {
+          status_pagamento: true,
+          usuario: {
+            select: {
+              nome: true,
+              email: true,
+            },
+          },
+          id_payment_mercado_pago: true,
+        },
+      });
+
+      const pagamentos = [];
+
+      for (const item of user_inscricao) {
+        if (item.id_payment_mercado_pago) {
+          const pagamento = await getPayment(item.id_payment_mercado_pago);
+          pagamentos.push(item, pagamento);
+        }
+      }
+
+      res.status(200).json({
+        pagamentos,
+      });
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
+  static async getUserInscricao(req: Request, res: Response) {
+    try {
+      const { user_id, lote_id } = req.params;
+  
+      const user_inscricao =
+        await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
+  
+      if (user_inscricao?.id_payment_mercado_pago) {
+        const payment = await getPayment(
+          user_inscricao!.id_payment_mercado_pago
+        );
+  
+        return res.status(200).json(payment);
+      }
+  
+      return res.status(200).json({ message: "Inscrição Gratuita" });
+    } catch (error) {
+      return res.status(400).send(error);
+    }
+  }
 }
 
-
-  // static async getUserInscricao(req: Request, res: Response) {
-  //   try {
-  //     const { user_id, lote_id } = req.params;
-
-  //     const user_inscricao =
-  //       await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
-
-  //     if (user_inscricao?.id_payment_mercado_pago) {
-  //       const payment = await getPayment(
-  //         user_inscricao!.id_payment_mercado_pago
-  //       );
-
-  //       return res.status(200).json(payment);
-  //     }
-
-  //     return res.status(200).json({ message: "Inscrição Gratuita" });
-  //   } catch (error) {
-  //     return res.status(400).send(error);
-  //   }
-  // }
-
-
- // static async findAllUserInscricao(req: Request, res: Response) {
-  //   try {
-  //     const { lote_id } = req.params;
-
-  //     const user_inscricao = await prisma.userInscricao.findMany({
-  //       where: {
-  //         uuid_lote: lote_id,
-  //         AND: {
-  //           status_pagamento: "PENDENTE",
-  //         },
-  //       },
-  //       select: {
-  //         status_pagamento: true,
-  //         usuario: {
-  //           select: {
-  //             nome: true,
-  //             email: true,
-  //           },
-  //         },
-  //         id_payment_mercado_pago: true,
-  //       },
-  //     });
-
-  //     const pagamentos = [];
-
-  //     for (const item of user_inscricao) {
-  //       if (item.id_payment_mercado_pago) {
-  //         const pagamento = await getPayment(item.id_payment_mercado_pago);
-  //         pagamentos.push(item, pagamento);
-  //       }
-  //     }
-
-  //     res.status(200).json({
-  //       pagamentos,
-  //     });
-  //   } catch (error) {
-  //     res.status(400).send(error);
-  //   }
-  // }
+ 

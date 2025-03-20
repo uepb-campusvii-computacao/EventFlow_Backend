@@ -67,7 +67,7 @@ export async function createPaymentUserResgistration(
     description: "Compra de ingresso",
     payment_method_id: "pix",
     date_of_expiration: date_of_expirationPix,
-    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/paymentUpdatePix`,
+    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/updateStatusPix`,
     payer: {
       email: user.email,
     },
@@ -94,7 +94,7 @@ export async function createPaymentUserResgistration(
     description: "Compra de ingresso",
     payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
     date_of_expiration: date_of_expirationCard,
-    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/payment/card`,
+    notification_url: `${process.env.API_URL}/lote/${lote_id}/user/${user_uuid}/updateStatusCard`,
     payer: (paymentInfo as PaymentInfo).payer,
     installments: (paymentInfo as PaymentInfo).installments,
     token: (paymentInfo as PaymentInfo).token,

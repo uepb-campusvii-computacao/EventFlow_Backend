@@ -489,8 +489,13 @@ export default class EventController {
         ]);
 
       const usersRegistered = userInscriptions.length;
+
       const usersWithPaymentStatusPending = userInscriptions.filter(
         (inscricao) => inscricao.status_pagamento === "PENDENTE"
+      ).length;
+
+      const usersWithPaymentStatusCancelado = userInscriptions.filter(
+        (inscricao) => inscricao.status_pagamento === "CANCELADO"
       ).length;
 
       const usersWithPaymentStatusGratuito = userInscriptions.filter(
@@ -511,6 +516,7 @@ export default class EventController {
         total_credenciados: credenciados,
         total_arrecadado: { totalArrecadadoInscricoes, totalArrecadadoVendas },
         inscricoes_pendentes: usersWithPaymentStatusPending,
+        inscricoes_canceladas: usersWithPaymentStatusCancelado,
         inscricoes_gratuitas: usersWithPaymentStatusGratuito,
       });
     } catch (error) {

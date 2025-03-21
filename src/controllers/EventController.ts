@@ -498,6 +498,10 @@ export default class EventController {
         (inscricao) => inscricao.status_pagamento === "CANCELADO"
       ).length;
 
+      const usersWithPaymentStatusRejeitado = userInscriptions.filter(
+        (inscricao) => inscricao.status_pagamento === "REJEITADO"
+      ).length;
+
       const usersWithPaymentStatusGratuito = userInscriptions.filter(
         (inscricao) => inscricao.status_pagamento === "GRATUITO"
       ).length;
@@ -518,6 +522,7 @@ export default class EventController {
         inscricoes_pendentes: usersWithPaymentStatusPending,
         inscricoes_canceladas: usersWithPaymentStatusCancelado,
         inscricoes_gratuitas: usersWithPaymentStatusGratuito,
+        inscricoes_rejeitadas: usersWithPaymentStatusRejeitado,
       });
     } catch (error) {
       console.error("Erro ao obter informações financeiras:", error);

@@ -23,5 +23,9 @@ BatchPrivateRoutes.post(
   EventController.registerParticipanteInEvent
 );
 
+BatchPrivateRoutes.post(
+  "/lote/:lote_id/create-new-payment",
+  EventController.createNewPayment
+);
 
 export default BatchPrivateRoutes;

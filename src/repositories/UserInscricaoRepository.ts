@@ -408,6 +408,31 @@ export default class UserInscricaoRepository {
     return updatedUser;
   }
 
+  static async updateUserInscricao(
+    tx: Prisma.TransactionClient,
+    uuid_lote: string,
+    uuid_user: string,
+    uuid_userInscricao: string,
+    payment_id: string,
+    expiration_date: string
+  ) {
+    const userInscricao = await tx.userInscricao.update({
+      where: {
+        uuid_lote_uuid_user: {
+          uuid_lote,
+          uuid_user,
+        },
+        uuid_userInscricao,
+      },
+      data: {
+        id_payment_mercado_pago: payment_id,
+        expiration_datetime: expiration_date,
+      },
+    });
+
+    return userInscricao;
+  }
+
   static async projectionTableCredenciamento(event_id: string) {
     const users = await prisma.userInscricao.findMany({
       where: {
@@ -514,6 +539,21 @@ export default class UserInscricaoRepository {
       },
       data: {
         credenciamento: credenciamento_value,
+      },
+    });
+  }
+
+  static async deleteUserInscricaoWithTransaction(
+    tx: Prisma.TransactionClient,
+    uuid_lote: string,
+    uuid_user: string
+  ) {
+    await tx.userInscricao.delete({
+      where: {
+        uuid_lote_uuid_user: {
+          uuid_lote,
+          uuid_user,
+        },
       },
     });
   }

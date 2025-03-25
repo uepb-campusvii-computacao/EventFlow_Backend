@@ -64,8 +64,8 @@ export async function createPaymentUserResgistration(
         },
       ],
       payer: {
-        first_name: user.nome,
-        last_name: user.nome.split(" ")[0],
+        first_name: user.nome.split(" ")[0],
+        last_name: user.nome.split(" ")[1],
       },
     },
     external_reference: uuid_userInscricao,
@@ -93,8 +93,8 @@ export async function createPaymentUserResgistration(
         },
       ],
       payer: {
-        first_name: user.nome,
-        last_name: user.nome.split(" ")[0],
+        first_name: user.nome.split(" ")[0],
+        last_name: user.nome.split(" ")[1],
       },
     },
     statement_descriptor: lote.descricao ?? undefined,

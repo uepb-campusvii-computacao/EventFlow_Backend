@@ -18,6 +18,7 @@ export async function createPaymentUserResgistration(
   tx: Prisma.TransactionClient,
   user_uuid: string,
   lote_id: string,
+  uuid_userInscricao: string,
   paymentInfo?: PaymentInfo
 ) {
   const user = await tx.usuario.findUnique({
@@ -41,10 +42,14 @@ export async function createPaymentUserResgistration(
   }
 
   const currentDate = dayjs();
-  const date_of_expirationPix = currentDate.add(15, "minute").format("YYYY-MM-DDTHH:mm:ss.000-03:00");
-  const date_of_expirationCard = currentDate.add(10, "day").format("YYYY-MM-DDTHH:mm:ss.000-03:00");
-  const pix_price = parseFloat((lote.preco + (lote.preco * 0.0099)).toFixed(2));
-  const card_price = parseFloat((lote.preco + (lote.preco * 0.0498)).toFixed(2));
+  const date_of_expirationPix = currentDate
+    .add(15, "minute")
+    .format("YYYY-MM-DDTHH:mm:ss.000-03:00");
+  const date_of_expirationCard = currentDate
+    .add(10, "day")
+    .format("YYYY-MM-DDTHH:mm:ss.000-03:00");
+  const pix_price = parseFloat((lote.preco + lote.preco * 0.0099).toFixed(2));
+  const card_price = parseFloat((lote.preco + lote.preco * 0.0498).toFixed(2));
 
   const pixBody = () => ({
     additional_info: {
@@ -59,10 +64,12 @@ export async function createPaymentUserResgistration(
         },
       ],
       payer: {
-        first_name: user.nome,
-        last_name: user.nome.split(" ")[0],
-      }
+        first_name: user.nome.split(" ")[0],
+        last_name: user.nome.split(" ")[1],
+      },
     },
+    external_reference: uuid_userInscricao,
+    statement_descriptor: lote.descricao ?? undefined,
     transaction_amount: pix_price,
     description: "Compra de ingresso",
     payment_method_id: "pix",
@@ -86,10 +93,12 @@ export async function createPaymentUserResgistration(
         },
       ],
       payer: {
-        first_name: user.nome,
-        last_name: user.nome.split(" ")[0],
-      }
+        first_name: user.nome.split(" ")[0],
+        last_name: user.nome.split(" ")[1],
+      },
     },
+    statement_descriptor: lote.descricao ?? undefined,
+    external_reference: uuid_userInscricao,
     transaction_amount: card_price,
     description: "Compra de ingresso",
     payment_method_id: (paymentInfo as PaymentInfo).payment_method_id,
@@ -103,7 +112,7 @@ export async function createPaymentUserResgistration(
   const body = paymentInfo ? cardBody() : pixBody();
 
   const requestOptions = {
-    idempotencyKey: `${user_uuid}-${lote_id}`,
+    idempotencyKey: `${uuid_userInscricao}`,
   };
 
   try {

@@ -29,14 +29,31 @@ export default class EventRepository {
     const lote = await LoteRepository.findLoteById(lote_id);
 
     if (lote.preco > 0) {
-      const { payment_id, expiration_date } =
-        await createPaymentUserResgistration(tx, user_id, lote_id, paymentInfo);
-
-      await UserInscricaoRepository.createUserInscricao(
+      const userInscricao = await UserInscricaoRepository.createUserInscricao(
         tx,
         user_id,
         lote_id,
-        user_id,
+        user_id
+      );
+
+      if (!userInscricao) {
+        throw new Error("Erro ao criar inscrição do usuário");
+      }
+      //! Quando adicionar todos os uuids no banco nas inscrições preexistentes retirar o "as string"
+      const { payment_id, expiration_date } =
+        await createPaymentUserResgistration(
+          tx,
+          user_id,
+          lote_id,
+          userInscricao.uuid_userInscricao as string,
+          paymentInfo
+        );
+
+      await UserInscricaoRepository.updateUserInscricao(
+        tx,
+        userInscricao.uuid_lote,
+        userInscricao.uuid_user,
+        userInscricao.uuid_userInscricao as string,
         payment_id,
         expiration_date
       );

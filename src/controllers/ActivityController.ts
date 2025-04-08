@@ -1,9 +1,10 @@
 import { TipoAtividade } from "@prisma/client";
+import { TurnoAtividade } from "@prisma/client";
 import { Request, Response } from "express";
 import { z, ZodError } from "zod";
 import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
 import { UpdateActivityParams } from "../interfaces/updateActivityParams";
-import { default as ActivityRepository } from "../repositories/ActivityRepository";
+import ActivityRepository from "../repositories/ActivityRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 
 export default class ActivityController {
@@ -183,16 +184,19 @@ export default class ActivityController {
 
   static async getActivitiesByShift(req: Request, res: Response) {
     try {
-      const activitiesByTurno = await ActivityRepository.findActivitiesGroupedByShift();
-      return res.status(200).json(activitiesByTurno);
+      const { turno } = req.query;
+      if (!turno) {
+        return res.status(400).json({ message: "O parâmetro 'turno' é obrigatório." });
+      }
+
+      const activities = await ActivityRepository.findActivitiesByShift(turno as TurnoAtividade);
+      return res.status(200).json(activities);
     } catch (error) {
       if (error instanceof Error) {
         return res.status(400).json({ message: error.message });
       }
 
-      return res
-        .status(500)
-        .json({ message: "An unexpected error occurred", error: error });
+      return res.status(500).json({ message: "Erro inesperado.", error });
     }
   }
 }

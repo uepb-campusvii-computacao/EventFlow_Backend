@@ -1,4 +1,5 @@
 import { TipoAtividade } from "@prisma/client";
+import { TurnoAtividade } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
 export default class ActivityRepository {
@@ -109,8 +110,11 @@ export default class ActivityRepository {
     return activity;
   }
 
-  static async findActivitiesGroupedByTurno() {
+  static async findActivitiesByShift(turno: TurnoAtividade) {
     const activities = await prisma.atividade.findMany({
+      where: {
+        turno: turno || null,
+      },
       select: {
         uuid_atividade: true,
         nome: true,
@@ -119,16 +123,7 @@ export default class ActivityRepository {
         max_participants: true,
       },
     });
-
-    const groupedActivities = activities.reduce((acc, activity) => {
-      const turno = activity.turno || "SEM_TURNO";
-      if (!acc[turno]) {
-        acc[turno] = [];
-      }
-      acc[turno].push(activity);
-      return acc;
-    }, {} as Record<string, typeof activities>);
-
-    return groupedActivities;
+  
+    return activities;
   }
 }

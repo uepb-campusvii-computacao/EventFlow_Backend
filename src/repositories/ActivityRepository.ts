@@ -1,4 +1,4 @@
-import { TipoAtividade } from "@prisma/client";
+import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
 export default class ActivityRepository {
@@ -86,15 +86,17 @@ export default class ActivityRepository {
     max_participants,
     data,
     descricao,
-    tipo_atividade
+    tipo_atividade,
+    turno,
   }: {
     uuid_evento: string;
     nome: string;
-    max_participants?:number;
+    max_participants?: number;
     data?: Date;
     descricao: string;
     tipo_atividade: TipoAtividade;
-  }){
+    turno?: TurnoAtividade;
+  }) {
     const activity = await prisma.atividade.create({
       data: {
         uuid_evento,
@@ -102,8 +104,9 @@ export default class ActivityRepository {
         date: data,
         descricao,
         max_participants,
-        tipo_atividade
-      }
+        tipo_atividade,
+        turno,
+      },
     });
 
     return activity;

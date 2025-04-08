@@ -15,6 +15,8 @@ ActivityPrivateRoutes.get(
   ActivityController.getActivityById
 );
 
+ActivityPrivateRoutes.get("/activities/shift", ActivityController.getActivitiesByShift);
+
 ActivityPrivateRoutes.put(
   "/atividades/:atividade_id",
   ActivityController.updateActivity

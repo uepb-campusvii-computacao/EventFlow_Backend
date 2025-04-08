@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import dayjs from "dayjs";
-import { payment } from "../../lib/mercado_pago";
+import { createPaymentClient } from "../../lib/mercado_pago";
 export type PaymentInfo = {
   token: string;
   payment_method_id: string;
@@ -13,7 +13,6 @@ export type PaymentInfo = {
     };
   };
 };
-
 export async function createPaymentUserResgistration(
   tx: Prisma.TransactionClient,
   user_uuid: string,
@@ -41,6 +40,13 @@ export async function createPaymentUserResgistration(
     throw new Error("Lote não encontrado");
   }
 
+  const event = await tx.evento.findUnique({
+    where: {
+      uuid_evento: lote.uuid_evento,
+    },
+  });
+
+  const payment = createPaymentClient(event?.access_token!);
   const currentDate = dayjs();
   const date_of_expirationPix = currentDate
     .add(15, "minute")
@@ -48,8 +54,10 @@ export async function createPaymentUserResgistration(
   const date_of_expirationCard = currentDate
     .add(10, "day")
     .format("YYYY-MM-DDTHH:mm:ss.000-03:00");
-  const pix_price = parseFloat((lote.preco + lote.preco * 0.0099).toFixed(2));
-  const card_price = parseFloat((lote.preco + lote.preco * 0.0498).toFixed(2));
+  
+  
+  const pix_price = parseFloat((lote.preco + lote.preco * 0.0099 + lote.preco * 0.03).toFixed(2));
+  const card_price = parseFloat((lote.preco + lote.preco * 0.0498 + lote.preco * 0.0099).toFixed(2));
 
   const pixBody = () => ({
     additional_info: {
@@ -68,6 +76,7 @@ export async function createPaymentUserResgistration(
         last_name: user.nome.split(" ")[1],
       },
     },
+    application_fee: 1,
     external_reference: uuid_userInscricao,
     statement_descriptor: lote.descricao ?? undefined,
     transaction_amount: pix_price,
@@ -97,6 +106,7 @@ export async function createPaymentUserResgistration(
         last_name: user.nome.split(" ")[1],
       },
     },
+    application_fee: 1,
     statement_descriptor: lote.descricao ?? undefined,
     external_reference: uuid_userInscricao,
     transaction_amount: card_price,
@@ -158,7 +168,14 @@ export async function createPaymentMultipleUsersResgistration(
   if (!lote) {
     throw new Error("Lote não encontrado");
   }
+  
+  const event = await tx.evento.findUnique({
+    where: {
+      uuid_evento: lote.uuid_evento,
+    },
+  });
 
+  const payment = createPaymentClient(event?.access_token!);
   const current_date = dayjs();
   const date_of_expirationPix = current_date.add(5, "minute");
   const date_of_expirationCard = current_date.add(10, "day");

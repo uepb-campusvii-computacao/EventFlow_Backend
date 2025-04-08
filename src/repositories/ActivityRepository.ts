@@ -108,4 +108,28 @@ export default class ActivityRepository {
 
     return activity;
   }
+
+  static async findActivitiesByTurno() {
+    const activities = await prisma.atividade.findMany({
+      select: {
+        uuid_atividade: true,
+        nome: true,
+        turno: true,
+        tipo_atividade: true,
+        max_participants: true,
+      },
+    });
+
+    const groupedActivities = activities.reduce((acc, activity) => {
+      const turno = activity.turno || "SEM_TURNO";
+      if (!acc[turno]) {
+        acc[turno] = [];
+      }
+      acc[turno].push(activity);
+      return acc;
+    }, {} as Record<string, typeof activities>);
+
+    return groupedActivities;
+  }
+
 }

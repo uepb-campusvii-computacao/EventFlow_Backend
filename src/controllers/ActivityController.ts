@@ -180,4 +180,19 @@ export default class ActivityController {
         .json({ message: "An unexpected error occurred", error: error });
     }
   }
+
+  static async getActivitiesByShift(req: Request, res: Response) {
+    try {
+      const activitiesByTurno = await ActivityRepository.findActivitiesGroupedByShift();
+      return res.status(200).json(activitiesByTurno);
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res
+        .status(500)
+        .json({ message: "An unexpected error occurred", error: error });
+    }
+  }
 }

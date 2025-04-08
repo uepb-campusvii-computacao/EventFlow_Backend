@@ -109,7 +109,7 @@ export default class ActivityRepository {
     return activity;
   }
 
-  static async findActivitiesByTurno() {
+  static async findActivitiesGroupedByTurno() {
     const activities = await prisma.atividade.findMany({
       select: {
         uuid_atividade: true,
@@ -131,5 +131,4 @@ export default class ActivityRepository {
 
     return groupedActivities;
   }
-
 }

@@ -45,7 +45,6 @@ export async function createPaymentUserResgistration(
       uuid_evento: lote.uuid_evento,
     },
   });
-
   const payment = createPaymentClient(event?.access_token!);
   const currentDate = dayjs();
   const date_of_expirationPix = currentDate
@@ -55,9 +54,9 @@ export async function createPaymentUserResgistration(
     .add(10, "day")
     .format("YYYY-MM-DDTHH:mm:ss.000-03:00");
   
-  
-  const pix_price = parseFloat((lote.preco + lote.preco * 0.0099 + lote.preco * 0.03).toFixed(2));
-  const card_price = parseFloat((lote.preco + lote.preco * 0.0498 + lote.preco * 0.0099).toFixed(2));
+  // adicionar aplication fee no preço final ao cliente
+  const pix_price = parseFloat((lote.preco + lote.preco * 0.0099).toFixed(2));
+  const card_price = parseFloat((lote.preco + lote.preco * 0.0498).toFixed(2));
 
   const pixBody = () => ({
     additional_info: {
@@ -76,7 +75,7 @@ export async function createPaymentUserResgistration(
         last_name: user.nome.split(" ")[1],
       },
     },
-    application_fee: 1,
+    //application_fee: 0.1,
     external_reference: uuid_userInscricao,
     statement_descriptor: lote.descricao ?? undefined,
     transaction_amount: pix_price,
@@ -106,7 +105,7 @@ export async function createPaymentUserResgistration(
         last_name: user.nome.split(" ")[1],
       },
     },
-    application_fee: 1,
+    //application_fee: 0.1,
     statement_descriptor: lote.descricao ?? undefined,
     external_reference: uuid_userInscricao,
     transaction_amount: card_price,

@@ -1,4 +1,4 @@
-import { TipoAtividade } from "@prisma/client";
+import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { Request, Response } from "express";
 import { z, ZodError } from "zod";
 import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
@@ -139,8 +139,6 @@ export default class ActivityController {
 
   static async createActivity(req: Request, res: Response) {
     try {
-      const uuid_user = res.locals.id;
-
       const uuid_evento = req.params.event_id;
 
       const createActivityParams = z
@@ -153,6 +151,7 @@ export default class ActivityController {
           }, z.date().optional()),
           descricao: z.string(),
           tipo_atividade: z.nativeEnum(TipoAtividade),
+          turno: z.nativeEnum(TurnoAtividade).optional(),
         })
         .parse(req.body);
 

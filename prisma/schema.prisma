@@ -85,6 +85,7 @@ model Atividade {
     uuid_atividade   String          @id @default(uuid())
     uuid_evento      String
     date             DateTime?
+    turno            TurnoAtividade?
     nome             String
     descricao        String?         @db.Text
     max_participants Int?
@@ -193,4 +194,10 @@ enum StatusPagamento {
     CANCELADO
     REJEITADO
     GRATUITO
+}
+
+enum TurnoAtividade {
+    MATUTINO
+    VESPERTINO
+    NOTURNO
 }

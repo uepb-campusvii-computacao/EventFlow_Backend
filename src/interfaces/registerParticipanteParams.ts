@@ -7,8 +7,6 @@ export interface RegisterParticipanteParams {
   email: string;
   perfil: Perfil;
   instituicao: string;
-  atividades?: {
-    atividade_id: string;
-  }[];
+  atividades?: string[];
   lote_id: string;
 }

@@ -21,7 +21,7 @@ export default class UserAtividadeRepository {
     const activities = await prisma.atividade.findMany({
       where: {
         uuid_atividade: {
-          in: atividades?.map((item) => item.atividade_id),
+          in: atividades?.map((item) => item),
         },
       },
       select: {
@@ -48,40 +48,35 @@ export default class UserAtividadeRepository {
 
     for (const item of atividades || []) {
       try {
-        console.log(item.atividade_id);
-
+        console.log(item);
         // Verifica se a atividade existe
         const activity = await tx.atividade.findUnique({
           where: {
-            uuid_atividade: item.atividade_id,
+            uuid_atividade: item,
           },
         });
-
         if (!activity) {
           throw new Error("Atividade não encontrada");
         }
-
         // Conta o número de participantes
         const count = await tx.userAtividade.count({
           where: {
-            uuid_atividade: item.atividade_id,
+            uuid_atividade: item,
           },
         });
-
         // Verifica se a atividade está cheia
         if (activity.max_participants && count >= activity.max_participants) {
           throw new Error(`A atividade ${activity.nome} está cheia`);
-        }
-
+        }  
         // Registra o usuário na atividade
         await tx.userAtividade.create({
           data: {
             uuid_user: user_uuid,
-            uuid_atividade: item.atividade_id,
+            uuid_atividade: item,
           },
         });
       } catch (error) {
-        console.error(`Erro ao registrar na atividade ${item.atividade_id}`);
+        console.error(`Erro ao registrar na atividade ${item}`);
         throw error; // Lança o erro novamente para quem chamou a função
       }
     }

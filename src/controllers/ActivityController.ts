@@ -153,8 +153,15 @@ export default class ActivityController {
           tipo_atividade: z.nativeEnum(TipoAtividade),
           turno: z.nativeEnum(TurnoAtividade).optional(),
         })
-        .parse(req.body);
-
+        .parse(req.body) as {
+          nome: string;
+          max_participants?: number;
+          data?: Date;
+          descricao: string;
+          tipo_atividade: TipoAtividade;
+          turno?: TurnoAtividade;
+        };
+        
       const activity = await ActivityRepository.createActivity({
         uuid_evento,
         ...createActivityParams,

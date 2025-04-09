@@ -20,11 +20,7 @@ export default class EventController {
     try {
       const registerUserInEventSchema = z.object({
         atividades: z
-          .array(
-            z.object({
-              atividade_id: z.string(),
-            })
-          )
+          .array(z.string()) 
           .optional(),
         paymentData: z
           .object({
@@ -85,9 +81,7 @@ export default class EventController {
       const registerUserInEventSchema = z.object({
         atividades: z
           .array(
-            z.object({
-              atividade_id: z.string(),
-            })
+            z.string()
           )
           .optional(),
         paymentData: z
@@ -148,11 +142,7 @@ export default class EventController {
     try {
       const registerUserInEventSchema = z.object({
         atividades: z
-          .array(
-            z.object({
-              atividade_id: z.string(),
-            })
-          )
+          .array(z.string())
           .optional(),
         usersIds: z.array(z.string()).min(1).max(2),
         paymentData: z

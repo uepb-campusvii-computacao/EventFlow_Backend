@@ -87,6 +87,7 @@ export default class ActivityRepository {
     data,
     descricao,
     tipo_atividade,
+    turno,
   }: {
     uuid_evento: string;
     nome: string;
@@ -94,6 +95,7 @@ export default class ActivityRepository {
     data?: Date;
     descricao: string;
     tipo_atividade: TipoAtividade;
+    turno?: TurnoAtividade;
   }) {
     const activity = await prisma.atividade.create({
       data: {
@@ -103,6 +105,7 @@ export default class ActivityRepository {
         descricao,
         max_participants,
         tipo_atividade,
+        turno,
       },
     });
 

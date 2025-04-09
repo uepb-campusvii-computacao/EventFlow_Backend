@@ -18,33 +18,61 @@ export default class UserAtividadeRepository {
     user_uuid: string,
     atividades: RegisterParticipanteParams["atividades"]
   ) {
+    const activities = await prisma.atividade.findMany({
+      where: {
+        uuid_atividade: {
+          in: atividades?.map((item) => item.atividade_id),
+        },
+      },
+      select: {
+        uuid_atividade: true,
+        turno: true,
+        tipo_atividade: true,
+        date: true,
+      },
+      orderBy: {
+        turno: "asc",
+      },
+    });
+
+    const seen = new Set<string>();
+    for (const activity of activities) {
+      const key = `${activity.turno}-${activity.tipo_atividade}`;
+      if (seen.has(key)) {
+        throw new Error(
+          "Não é permitido selecionar mais de uma atividade com o mesmo tipo no mesmo turno."
+        );
+      }
+      seen.add(key);
+    }
+
     for (const item of atividades || []) {
       try {
         console.log(item.atividade_id);
-        
+
         // Verifica se a atividade existe
         const activity = await tx.atividade.findUnique({
           where: {
             uuid_atividade: item.atividade_id,
           },
         });
-  
+
         if (!activity) {
           throw new Error("Atividade não encontrada");
         }
-  
+
         // Conta o número de participantes
         const count = await tx.userAtividade.count({
           where: {
             uuid_atividade: item.atividade_id,
           },
         });
-  
+
         // Verifica se a atividade está cheia
         if (activity.max_participants && count >= activity.max_participants) {
           throw new Error(`A atividade ${activity.nome} está cheia`);
         }
-  
+
         // Registra o usuário na atividade
         await tx.userAtividade.create({
           data: {
@@ -52,14 +80,12 @@ export default class UserAtividadeRepository {
             uuid_atividade: item.atividade_id,
           },
         });
-  
       } catch (error) {
         console.error(`Erro ao registrar na atividade ${item.atividade_id}`);
         throw error; // Lança o erro novamente para quem chamou a função
       }
     }
   }
-  
 
   static async changeUserAtividade(
     uuid_atividade_atual: string,

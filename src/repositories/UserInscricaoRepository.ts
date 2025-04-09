@@ -452,6 +452,7 @@ export default class UserInscricaoRepository {
             nome: true,
             email: true,
             nome_cracha: true,
+            instituicao: true,
           },
         },
         status_pagamento: true,
@@ -473,6 +474,7 @@ export default class UserInscricaoRepository {
       uuid_lote: userInscricao.uuid_lote,
       status_pagamento: userInscricao.status_pagamento,
       credenciamento: userInscricao.credenciamento,
+      instituicao: userInscricao.usuario.instituicao,
     }));
   }
 

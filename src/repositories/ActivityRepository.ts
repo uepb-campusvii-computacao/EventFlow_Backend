@@ -121,7 +121,11 @@ export default class ActivityRepository {
         turno: true,
         tipo_atividade: true,
         max_participants: true,
-        _count: true,
+        _count: {
+          select: {
+            userAtividade: true,
+          },
+        },
       },
     });
 
@@ -139,17 +143,28 @@ export default class ActivityRepository {
         turno: true,
         tipo_atividade: true,
         max_participants: true,
-        _count: true,
+        _count: {
+          select: {
+            userAtividade: true,
+          },
+        },
       },
     });
 
-    const groupedByTypeAndShift = activities.reduce(
+    const activitiesFormatted = activities.map((activity) => {
+      return {
+        ...activity,
+        _count: activity._count.userAtividade,
+      };
+    });
+
+    const groupedByTypeAndShift = activitiesFormatted.reduce(
       (
         acc: Record<
           string,
           Record<
             TurnoAtividade | "Sem turno",
-            Array<(typeof activities)[number]>
+            Array<(typeof activitiesFormatted)[number]>
           >
         >,
         activity
@@ -159,7 +174,7 @@ export default class ActivityRepository {
         if (!acc[tipo_atividade]) {
           acc[tipo_atividade] = {} as Record<
             TurnoAtividade | "Sem turno",
-            Array<(typeof activities)[number]>
+            Array<(typeof activitiesFormatted)[number]>
           >;
         }
         if (!acc[tipo_atividade][shift]) {
@@ -170,7 +185,10 @@ export default class ActivityRepository {
       },
       {} as Record<
         string,
-        Record<TurnoAtividade | "Sem turno", Array<(typeof activities)[number]>>
+        Record<
+          TurnoAtividade | "Sem turno",
+          Array<(typeof activitiesFormatted)[number]>
+        >
       >
     );
 

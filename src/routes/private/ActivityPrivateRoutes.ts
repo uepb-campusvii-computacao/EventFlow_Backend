@@ -3,7 +3,7 @@ import ActivityController from "../../controllers/ActivityController";
 import { checkToken } from "../../middlewares/ensureAuthenticate";
 
 const ActivityPrivateRoutes = express.Router();
-ActivityPrivateRoutes.use(checkToken)
+ActivityPrivateRoutes.use(checkToken);
 
 ActivityPrivateRoutes.get(
   "/atividades/:atividade_id/inscricoes",

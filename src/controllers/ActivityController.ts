@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { z, ZodError } from "zod";
 import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
 import { UpdateActivityParams } from "../interfaces/updateActivityParams";
-import { default as ActivityRepository } from "../repositories/ActivityRepository";
+import ActivityRepository from "../repositories/ActivityRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 
 export default class ActivityController {
@@ -177,6 +177,57 @@ export default class ActivityController {
       return res
         .status(500)
         .json({ message: "An unexpected error occurred", error: error });
+    }
+  }
+
+  static async getActivitiesByShift(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      if (!event_id) {
+        return res
+          .status(400)
+          .json({ message: "O id do evento é obrigatório" });
+      }
+
+      const { turno } = req.query;
+
+      const activities = await ActivityRepository.findActivitiesByShift(
+        (turno as TurnoAtividade) || null,
+        event_id
+      );
+
+      return res.status(200).json(activities);
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res.status(500).json({ message: "Erro inesperado.", error });
+    }
+  }
+
+  static async getAllActivitiesByShift(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      if (!event_id) {
+        return res
+          .status(400)
+          .json({ message: "O id do evento é obrigatório" });
+      }
+
+      const activities = await ActivityRepository.findAllActivitiesByShift(
+        event_id
+      );
+
+      return res.status(200).json(activities);
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res.status(500).json({ message: "Erro inesperado.", error });
     }
   }
 }

@@ -64,4 +64,14 @@ EventPrivateRoutes.post(
   EventController.verifyEventPassword
 );
 
+EventPrivateRoutes.get(
+  "/events/:event_id/atividades/shift",
+  ActivityController.getActivitiesByShift
+);
+
+EventPrivateRoutes.get(
+  "/events/:event_id/allAtividades/shift",
+  ActivityController.getAllActivitiesByShift
+);
+
 export default EventPrivateRoutes;

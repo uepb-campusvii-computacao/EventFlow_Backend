@@ -141,31 +141,37 @@ export default class ActivityRepository {
       },
     });
 
-    const groupedActivities = activities.reduce(
+    const groupedByTypeAndShift = activities.reduce(
       (
         acc: Record<
-          TurnoAtividade | "Sem turno",
-          Array<(typeof activities)[number]>
+          string,
+          Record<
+            TurnoAtividade | "Sem turno",
+            Array<(typeof activities)[number]>
+          >
         >,
         activity
       ) => {
-        const turno: TurnoAtividade | "Sem turno" =
-          activity.turno || "Sem turno";
-
-        if (!acc[turno]) {
-          acc[turno] = [];
+        const { tipo_atividade, turno } = activity;
+        const shift = turno || "Sem turno";
+        if (!acc[tipo_atividade]) {
+          acc[tipo_atividade] = {} as Record<
+            TurnoAtividade | "Sem turno",
+            Array<(typeof activities)[number]>
+          >;
         }
-
-        acc[turno].push(activity);
-
+        if (!acc[tipo_atividade][shift]) {
+          acc[tipo_atividade][shift] = [];
+        }
+        acc[tipo_atividade][shift].push(activity);
         return acc;
       },
       {} as Record<
-        TurnoAtividade | "Sem turno",
-        Array<(typeof activities)[number]>
+        string,
+        Record<TurnoAtividade | "Sem turno", Array<(typeof activities)[number]>>
       >
     );
 
-    return groupedActivities;
+    return groupedByTypeAndShift;
   }
 }

@@ -121,6 +121,7 @@ export default class ActivityRepository {
         turno: true,
         tipo_atividade: true,
         max_participants: true,
+        _count: true,
       },
     });
 
@@ -138,6 +139,7 @@ export default class ActivityRepository {
         turno: true,
         tipo_atividade: true,
         max_participants: true,
+        _count: true,
       },
     });
 

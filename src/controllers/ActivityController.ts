@@ -1,5 +1,4 @@
-import { TipoAtividade } from "@prisma/client";
-import { TurnoAtividade } from "@prisma/client";
+import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { Request, Response } from "express";
 import { z, ZodError } from "zod";
 import { ChangeActivityParamsRequest } from "../interfaces/changeActivityParamsRequest";
@@ -184,12 +183,45 @@ export default class ActivityController {
 
   static async getActivitiesByShift(req: Request, res: Response) {
     try {
-      const { turno } = req.query;
-      if (!turno) {
-        return res.status(400).json({ message: "O parâmetro 'turno' é obrigatório." });
+      const { event_id } = req.params;
+
+      if (!event_id) {
+        return res
+          .status(400)
+          .json({ message: "O id do evento é obrigatório" });
       }
 
-      const activities = await ActivityRepository.findActivitiesByShift(turno as TurnoAtividade);
+      const { turno } = req.query;
+
+      const activities = await ActivityRepository.findActivitiesByShift(
+        (turno as TurnoAtividade) || null,
+        event_id
+      );
+
+      return res.status(200).json(activities);
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      return res.status(500).json({ message: "Erro inesperado.", error });
+    }
+  }
+
+  static async getAllActivitiesByShift(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      if (!event_id) {
+        return res
+          .status(400)
+          .json({ message: "O id do evento é obrigatório" });
+      }
+
+      const activities = await ActivityRepository.findAllActivitiesByShift(
+        event_id
+      );
+
       return res.status(200).json(activities);
     } catch (error) {
       if (error instanceof Error) {

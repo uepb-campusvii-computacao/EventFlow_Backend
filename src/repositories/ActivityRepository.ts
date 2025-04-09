@@ -1,5 +1,4 @@
-import { TipoAtividade } from "@prisma/client";
-import { TurnoAtividade } from "@prisma/client";
+import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
 export default class ActivityRepository {
@@ -87,15 +86,15 @@ export default class ActivityRepository {
     max_participants,
     data,
     descricao,
-    tipo_atividade
+    tipo_atividade,
   }: {
     uuid_evento: string;
     nome: string;
-    max_participants?:number;
+    max_participants?: number;
     data?: Date;
     descricao: string;
     tipo_atividade: TipoAtividade;
-  }){
+  }) {
     const activity = await prisma.atividade.create({
       data: {
         uuid_evento,
@@ -103,16 +102,17 @@ export default class ActivityRepository {
         date: data,
         descricao,
         max_participants,
-        tipo_atividade
-      }
+        tipo_atividade,
+      },
     });
 
     return activity;
   }
 
-  static async findActivitiesByShift(turno: TurnoAtividade) {
+  static async findActivitiesByShift(turno: TurnoAtividade, event_id: string) {
     const activities = await prisma.atividade.findMany({
       where: {
+        uuid_evento: event_id,
         turno: turno || null,
       },
       select: {
@@ -123,7 +123,49 @@ export default class ActivityRepository {
         max_participants: true,
       },
     });
-  
+
     return activities;
+  }
+
+  static async findAllActivitiesByShift(event_id: string) {
+    const activities = await prisma.atividade.findMany({
+      where: {
+        uuid_evento: event_id,
+      },
+      select: {
+        uuid_atividade: true,
+        nome: true,
+        turno: true,
+        tipo_atividade: true,
+        max_participants: true,
+      },
+    });
+
+    const groupedActivities = activities.reduce(
+      (
+        acc: Record<
+          TurnoAtividade | "Sem turno",
+          Array<(typeof activities)[number]>
+        >,
+        activity
+      ) => {
+        const turno: TurnoAtividade | "Sem turno" =
+          activity.turno || "Sem turno";
+
+        if (!acc[turno]) {
+          acc[turno] = [];
+        }
+
+        acc[turno].push(activity);
+
+        return acc;
+      },
+      {} as Record<
+        TurnoAtividade | "Sem turno",
+        Array<(typeof activities)[number]>
+      >
+    );
+
+    return groupedActivities;
   }
 }

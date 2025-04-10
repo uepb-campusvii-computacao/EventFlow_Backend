@@ -14,9 +14,7 @@ export default class UserEventRepository {
   }: {
     uuid_user: string;
     perfil: Perfil;
-    atividades?: {
-      atividade_id: string;
-    }[];
+    atividades?: string[];
     lote_id: string;
     paymentInfo?: PaymentInfo;
   }) {
@@ -68,9 +66,7 @@ export default class UserEventRepository {
   }: {
     uuid_user: string;
     perfil: Perfil;
-    atividades?: {
-      atividade_id: string;
-    }[];
+    atividades?: string[];
     lote_id: string;
     paymentInfo?: PaymentInfo;
   }) {
@@ -152,9 +148,7 @@ export default class UserEventRepository {
     uuid_guest: string;
     payer_id: string;
     perfil: Perfil;
-    atividades?: {
-      atividade_id: string;
-    }[];
+    atividades?: string[];
     lote_id: string;
     paymentInfo?: PaymentInfo;
   }) {
@@ -207,7 +201,7 @@ export default class UserEventRepository {
     perfil,
     paymentInfo,
   }: {
-    atividades?: { atividade_id: string }[];
+    atividades?: string[];
     usersIds: string[];
     loteId: string;
     perfil?: Perfil;

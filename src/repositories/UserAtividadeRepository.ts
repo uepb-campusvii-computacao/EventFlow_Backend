@@ -21,7 +21,7 @@ export default class UserAtividadeRepository {
     const activities = await prisma.atividade.findMany({
       where: {
         uuid_atividade: {
-          in: atividades?.map((item) => item.atividade_id),
+          in: atividades?.map((item) => item),
         },
       },
       select: {
@@ -35,25 +35,19 @@ export default class UserAtividadeRepository {
       },
     });
 
-    const seen = new Set<string>();
-    for (const activity of activities) {
-      const key = `${activity.turno}-${activity.tipo_atividade}`;
-      if (seen.has(key)) {
-        throw new Error(
-          "Não é permitido selecionar mais de uma atividade com o mesmo tipo no mesmo turno."
-        );
-      }
-      seen.add(key);
-    }
-
     for (const item of atividades || []) {
       try {
-        console.log(item.atividade_id);
-
         // Verifica se a atividade existe
         const activity = await tx.atividade.findUnique({
           where: {
-            uuid_atividade: item.atividade_id,
+            uuid_atividade: item,
+          },
+          include: {
+            _count: {
+              select: {
+                userAtividade: true,
+              },
+            },
           },
         });
 
@@ -61,27 +55,36 @@ export default class UserAtividadeRepository {
           throw new Error("Atividade não encontrada");
         }
 
-        // Conta o número de participantes
-        const count = await tx.userAtividade.count({
-          where: {
-            uuid_atividade: item.atividade_id,
-          },
-        });
-
         // Verifica se a atividade está cheia
-        if (activity.max_participants && count >= activity.max_participants) {
+        if (
+          activity.max_participants !== null &&
+          activity._count.userAtividade >= activity.max_participants
+        ) {
           throw new Error(`A atividade ${activity.nome} está cheia`);
         }
 
-        // Registra o usuário na atividade
+        // Verifica se o usuário já está inscrito em outra atividade do mesmo tipo no mesmo turno
+        const conflictingActivity = activities.find(
+          (atividade) =>
+            atividade.turno === activity.turno &&
+            atividade.tipo_atividade === activity.tipo_atividade &&
+            atividade.uuid_atividade !== item
+        );
+        if (conflictingActivity) {
+          throw new Error(
+            `Você já está inscrito em outra atividade do mesmo tipo no turno ${activity.turno}`
+          );
+        }
+
+        // Cria a inscrição do usuário na atividade
         await tx.userAtividade.create({
           data: {
             uuid_user: user_uuid,
-            uuid_atividade: item.atividade_id,
+            uuid_atividade: item,
           },
         });
       } catch (error) {
-        console.error(`Erro ao registrar na atividade ${item.atividade_id}`);
+        console.error(`Erro ao registrar na atividade ${item}`);
         throw error; // Lança o erro novamente para quem chamou a função
       }
     }

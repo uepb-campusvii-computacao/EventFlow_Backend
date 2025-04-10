@@ -9,37 +9,14 @@ export default class OrderRepository {
       },
       distinct: ["uuid_pagamento"],
       orderBy: {
-        pagamento: {
-          data_criacao: "desc",
-        },
+        uuid_pagamento: "desc",
       },
       select: {
-        pagamento: {
+        uuid_user: true,
+        uuid_pagamento: true,
+        produto: {
           select: {
-            uuid_user: true,
-            uuid_pagamento: true,
-            data_criacao: true,
-            id_payment_mercado_pago: true,
-            status_pagamento: true,
-            valor_total: true,
-            usuario: {
-              select: {
-                nome: true,
-              },
-            },
-            vendas: {
-              select: {
-                quantidade: true,
-                produto: {
-                  select: {
-                    uuid_produto: true,
-                    nome: true,
-                    preco: true,
-                    imagem_url: true,
-                  },
-                },
-              },
-            },
+            uuid_evento: true,
           },
         },
       },
@@ -115,21 +92,18 @@ export default class OrderRepository {
             uuid_evento: idEvento,
           },
         },
-        pagamento: {
-          status_pagamento: "REALIZADO",
-        },
       },
-      select: {
-        pagamento: {
+      include: {
+        produto: {
           select: {
-            valor_total: true,
+            preco: true,
           },
         },
       },
     });
 
     const valorTotalVendas = vendas.reduce(
-      (acc, venda) => acc + venda.pagamento.valor_total,
+      (acc, venda) => acc + venda.quantidade * venda.produto.preco,
       0
     );
 

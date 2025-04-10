@@ -1,9 +1,9 @@
 import { StatusPagamento } from "@prisma/client";
 import { createPaymentClient } from "../../lib/mercado_pago";
-import OrderRepository from "../../repositories/OrderRepository";
-import UserInscricaoRepository from "../../repositories/UserInscricaoRepository";
 import EventRepository from "../../repositories/EventRepository";
 import LoteRepository from "../../repositories/LoteRepository";
+import OrderRepository from "../../repositories/OrderRepository";
+import UserInscricaoRepository from "../../repositories/UserInscricaoRepository";
 const statusPagamentoHash: { [key: string]: StatusPagamento } = {
   pending: StatusPagamento.PENDENTE,
   approved: StatusPagamento.REALIZADO,
@@ -12,8 +12,6 @@ const statusPagamentoHash: { [key: string]: StatusPagamento } = {
   rejected: StatusPagamento.REJEITADO,
   authorized: StatusPagamento.REALIZADO,
 };
-
-
 
 export async function getPaymentStatusForInscricao(
   user_id: string,
@@ -24,7 +22,7 @@ export async function getPaymentStatusForInscricao(
       user_id,
       lote_id
     );
-    const {uuid_evento} = await LoteRepository.findLoteById(lote_id);
+    const { uuid_evento } = await LoteRepository.findLoteById(lote_id);
     const { access_token } = await EventRepository.findEventById(uuid_evento);
     const payment = createPaymentClient(access_token!);
     if (!user) {
@@ -35,18 +33,21 @@ export async function getPaymentStatusForInscricao(
       throw new Error("Pagamento não encontrado!");
     }
 
-    const { status, status_detail, payment_type_id, card}  = await payment.get({ id: user.id_payment_mercado_pago });
+    const { status, status_detail, payment_type_id, card } = await payment.get({
+      id: user.id_payment_mercado_pago,
+    });
 
     if (!status) {
       throw new Error("Status de pagamento não encontrado!");
     }
-    
+
     return {
-      status: status in statusPagamentoHash ? statusPagamentoHash[status] : undefined,
+      status:
+        status in statusPagamentoHash ? statusPagamentoHash[status] : undefined,
       status_detail,
       payment_type_id,
       last_four_digits: card?.last_four_digits,
-    }
+    };
   } catch (error) {
     throw error;
   }
@@ -70,7 +71,7 @@ export async function getPaymentStatusForMultipleSubscriptions(
     if (!user.id_payment_mercado_pago) {
       throw new Error("Pagamento não encontrado!");
     }
-    const {uuid_evento} = await LoteRepository.findLoteById(loteId);
+    const { uuid_evento } = await LoteRepository.findLoteById(loteId);
     const { access_token } = await EventRepository.findEventById(uuid_evento);
     const payment = createPaymentClient(access_token!);
     const { status } = await payment.get({ id: user.id_payment_mercado_pago });
@@ -119,8 +120,9 @@ export async function getPaymentStatusForVenda(
   }
 }
 
-export async function getPayment(payment_id: string) {
-    const payment = createPaymentClient("TEST-ACCESS_TOKEN");
+export async function getPayment(payment_id: string, uuid_event: string) {
+  const { access_token } = await EventRepository.findEventById(uuid_event);
+  const payment = createPaymentClient(access_token!);
   const payment_data = await payment.get({ id: payment_id });
 
   if (!payment_data) {

@@ -85,7 +85,6 @@ model Atividade {
     uuid_atividade   String          @id @default(uuid())
     uuid_evento      String
     date             DateTime?
-    turno            TurnoAtividade?
     nome             String
     descricao        String?         @db.Text
     max_participants Int?
@@ -119,7 +118,7 @@ model UserAtividade {
     updated_at     DateTime  @default(now()) @updatedAt
     user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
     atividade      Atividade @relation(fields: [uuid_atividade], references: [uuid_atividade])
-
+    
     @@id([uuid_user, uuid_atividade])
     @@map("tb_usuario_atividade")
 }
@@ -194,10 +193,4 @@ enum StatusPagamento {
     CANCELADO
     REJEITADO
     GRATUITO
-}
-
-enum TurnoAtividade {
-    MATUTINO
-    VESPERTINO
-    NOTURNO
 }

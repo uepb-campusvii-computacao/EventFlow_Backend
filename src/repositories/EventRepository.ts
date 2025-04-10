@@ -315,6 +315,7 @@ export default class EventRepository {
         uuid_evento: event_id,
       },
       select: {
+        access_token: true,
         isPrivate: true,
         conteudo: true,
         date: true,

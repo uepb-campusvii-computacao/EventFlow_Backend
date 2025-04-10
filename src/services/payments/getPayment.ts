@@ -1,7 +1,9 @@
 import { StatusPagamento } from "@prisma/client";
-import { payment } from "../../lib/mercado_pago";
+import { createPaymentClient } from "../../lib/mercado_pago";
 import OrderRepository from "../../repositories/OrderRepository";
 import UserInscricaoRepository from "../../repositories/UserInscricaoRepository";
+import EventRepository from "../../repositories/EventRepository";
+import LoteRepository from "../../repositories/LoteRepository";
 const statusPagamentoHash: { [key: string]: StatusPagamento } = {
   pending: StatusPagamento.PENDENTE,
   approved: StatusPagamento.REALIZADO,
@@ -10,6 +12,8 @@ const statusPagamentoHash: { [key: string]: StatusPagamento } = {
   rejected: StatusPagamento.REJEITADO,
   authorized: StatusPagamento.REALIZADO,
 };
+
+
 
 export async function getPaymentStatusForInscricao(
   user_id: string,
@@ -20,7 +24,9 @@ export async function getPaymentStatusForInscricao(
       user_id,
       lote_id
     );
-
+    const {uuid_evento} = await LoteRepository.findLoteById(lote_id);
+    const { access_token } = await EventRepository.findEventById(uuid_evento);
+    const payment = createPaymentClient(access_token!);
     if (!user) {
       throw new Error("Inscrição não encontrada!");
     }
@@ -64,7 +70,9 @@ export async function getPaymentStatusForMultipleSubscriptions(
     if (!user.id_payment_mercado_pago) {
       throw new Error("Pagamento não encontrado!");
     }
-
+    const {uuid_evento} = await LoteRepository.findLoteById(loteId);
+    const { access_token } = await EventRepository.findEventById(uuid_evento);
+    const payment = createPaymentClient(access_token!);
     const { status } = await payment.get({ id: user.id_payment_mercado_pago });
 
     if (!status) {
@@ -94,7 +102,7 @@ export async function getPaymentStatusForVenda(
     if (!pagamento.id_payment_mercado_pago) {
       throw new Error("Pagamento não encontrado!");
     }
-
+    const payment = createPaymentClient("TEST-ACCESS_TOKEN");
     const { status } = await payment.get({
       id: pagamento.id_payment_mercado_pago,
     });
@@ -112,6 +120,7 @@ export async function getPaymentStatusForVenda(
 }
 
 export async function getPayment(payment_id: string) {
+    const payment = createPaymentClient("TEST-ACCESS_TOKEN");
   const payment_data = await payment.get({ id: payment_id });
 
   if (!payment_data) {

@@ -25,10 +25,11 @@ model Usuario {
     active               Boolean         @default(true)
     passwordResetToken   String?
     passwordResetExpires DateTime?
+    created_at           DateTime        @default(now())
+    updated_at           DateTime        @default(now()) @updatedAt
     evento               Evento[]
     userAtividade        UserAtividade[]
     userInscricao        UserInscricao[]
-    Pagamento            Pagamento[]
     Venda                Venda[]
     UserEvento           UserEvento[]
     UserInscricao        UserInscricao[] @relation(name: "UserInscricaoPayer")
@@ -48,6 +49,12 @@ model Evento {
     password           String?
     colors             String?
     background_img_url String?
+    access_token       String?
+    public_key         String?
+    refresh_token      String?
+    expires_in         Int?
+    created_at         DateTime     @default(now())
+    updated_at         DateTime     @default(now()) @updatedAt
     usuario            Usuario      @relation(fields: [uuid_user_owner], references: [uuid_user])
     lote               Lote[]
     atividade          Atividade[]
@@ -66,6 +73,8 @@ model Lote {
     max_inscricoes Int
     inscricoes     Int
     ativo          Boolean         @default(true)
+    created_at     DateTime        @default(now())
+    updated_at     DateTime        @default(now()) @updatedAt
     evento         Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
     userInscricao  UserInscricao[]
 
@@ -79,6 +88,8 @@ model Atividade {
     nome             String
     descricao        String?         @db.Text
     max_participants Int?
+    created_at       DateTime        @default(now())
+    updated_at       DateTime        @default(now()) @updatedAt
     tipo_atividade   TipoAtividade   @default(MINICURSO)
     evento           Evento          @relation(fields: [uuid_evento], references: [uuid_evento])
     userAtividade    UserAtividade[]
@@ -90,6 +101,7 @@ model UserEvento {
     uuid_user   String
     uuid_evento String
     create_at   DateTime @default(now())
+    updated_at  DateTime @default(now()) @updatedAt
     perfil      Perfil   @default(PARTICIPANTE)
     usuario     Usuario  @relation(fields: [uuid_user], references: [uuid_user])
     evento      Evento   @relation(fields: [uuid_evento], references: [uuid_evento])
@@ -102,6 +114,8 @@ model UserAtividade {
     uuid_user      String
     uuid_atividade String
     presenca       Boolean   @default(false)
+    created_at     DateTime  @default(now())
+    updated_at     DateTime  @default(now()) @updatedAt
     user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
     atividade      Atividade @relation(fields: [uuid_atividade], references: [uuid_atividade])
     
@@ -120,6 +134,8 @@ model UserInscricao {
     status_detail           String?
     payment_method          String?
     last_four_digits        String?
+    created_at              DateTime        @default(now())
+    updated_at              DateTime        @default(now()) @updatedAt
     status_pagamento        StatusPagamento @default(PENDENTE)
     usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
     lote                    Lote            @relation(fields: [uuid_lote], references: [uuid_lote])
@@ -130,42 +146,29 @@ model UserInscricao {
 }
 
 model Produto {
-    uuid_produto String  @id @default(uuid())
+    uuid_produto String   @id @default(uuid())
     nome         String
-    descricao    String? @db.Text
+    descricao    String?  @db.Text
     preco        Float
-    estoque      Int     @default(0)
+    estoque      Int      @default(0)
     imagem_url   String?
     uuid_evento  String
-    evento       Evento  @relation(fields: [uuid_evento], references: [uuid_evento])
+    created_at   DateTime @default(now())
+    updated_at   DateTime @default(now()) @updatedAt
+    evento       Evento   @relation(fields: [uuid_evento], references: [uuid_evento])
     Venda        Venda[]
 
     @@map("tb_produto")
 }
 
-model Pagamento {
-    uuid_pagamento          String          @id @default(uuid())
-    uuid_user               String
-    id_payment_mercado_pago String
-    valor_total             Float
-    status_pagamento        StatusPagamento @default(PENDENTE)
-    data_pagamento          DateTime?
-    data_criacao            DateTime        @default(now())
-    usuario                 Usuario         @relation(fields: [uuid_user], references: [uuid_user])
-    vendas                  Venda[]
-
-    @@map("tb_pagamento")
-}
-
 model Venda {
-    uuid_venda     String    @id @default(uuid())
+    uuid_venda     String  @id @default(uuid())
     uuid_user      String
     uuid_produto   String
-    quantidade     Int       @default(1)
+    quantidade     Int     @default(1)
     uuid_pagamento String
-    produto        Produto   @relation(fields: [uuid_produto], references: [uuid_produto])
-    user           Usuario   @relation(fields: [uuid_user], references: [uuid_user])
-    pagamento      Pagamento @relation(fields: [uuid_pagamento], references: [uuid_pagamento])
+    produto        Produto @relation(fields: [uuid_produto], references: [uuid_produto])
+    user           Usuario @relation(fields: [uuid_user], references: [uuid_user])
 
     @@map("tb_venda")
 }

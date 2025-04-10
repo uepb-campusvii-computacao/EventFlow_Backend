@@ -1,9 +1,11 @@
 import { addDays, format } from "date-fns";
-import { payment } from "../../lib/mercado_pago";
+import { createPaymentClient } from "../../lib/mercado_pago";
 import { CreateOrderParams } from "../../interfaces/createOrderParams";
 import { prisma } from "../../lib/prisma";
 import { Prisma } from "@prisma/client";
 
+
+    const payment = createPaymentClient("");
 export async function createPaymentMarketPlace({
   email,
   produtos,
@@ -28,14 +30,14 @@ export async function createPaymentMarketPlace({
       if (!produtos || produtos.length === 0) {
         throw new Error("Pelo menos um produto deve ser fornecido.");
       }
-
-      const pagamento = await tx.pagamento.create({
-        data: {
-          uuid_user: usuario.uuid_user,
-          valor_total: 0,
-          id_payment_mercado_pago: "",
-        },
-      });
+      
+      // const pagamento = await tx.pagamento.create({
+      //   data: {
+      //     uuid_user: usuario.uuid_user,
+      //     valor_total: 0,
+      //     id_payment_mercado_pago: "",
+      //   },
+      // });
 
       let precoTotal = 0;
 
@@ -66,14 +68,14 @@ export async function createPaymentMarketPlace({
 
         precoTotal += produto.preco * quantidade;
 
-        await tx.venda.create({
-          data: {
-            uuid_produto: produto.uuid_produto,
-            uuid_user: usuario.uuid_user,
-            quantidade,
-            uuid_pagamento: pagamento.uuid_pagamento,
-          },
-        });
+        // await tx.venda.create({
+        //   data: {
+        //     uuid_produto: produto.uuid_produto,
+        //     uuid_user: usuario.uuid_user,
+        //     quantidade,
+        //      uuid_pagamento: pagamento.uuid_pagamento,
+        //   },
+        // });
       }
 
       const current_date = new Date();
@@ -87,14 +89,14 @@ export async function createPaymentMarketPlace({
           date_of_expiration,
           "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         ),
-        notification_url: `${process.env.API_URL}/marketplace/${pagamento.uuid_pagamento}/realizar-pagamento`,
+        // notification_url: `${process.env.API_URL}/marketplace/${pagamento.uuid_pagamento}/realizar-pagamento`,
         payer: {
           email: email, // Correção: usar o email fornecido
         },
       };
 
       const requestOptions = {
-        idempotencyKey: `${usuario.uuid_user}-${pagamento.uuid_pagamento}`, // Correção: use o UUID do usuário e do primeiro produto (supondo que seja válido)
+        // idempotencyKey: `${usuario.uuid_user}-${pagamento.uuid_pagamento}`, // Correção: use o UUID do usuário e do primeiro produto (supondo que seja válido)
       };
 
       try {
@@ -103,15 +105,15 @@ export async function createPaymentMarketPlace({
           requestOptions,
         });
 
-        return await tx.pagamento.update({
-          where: {
-            uuid_pagamento: pagamento.uuid_pagamento,
-          },
-          data: {
-            valor_total: precoTotal,
-            id_payment_mercado_pago: response.id!.toString(),
-          },
-        });
+        // return await tx.pagamento.update({
+        //   where: {
+        //     uuid_pagamento: pagamento.uuid_pagamento,
+        //   },
+        //   data: {
+        //     valor_total: precoTotal,
+        //     id_payment_mercado_pago: response.id!.toString(),
+        //   },
+        // });
       } catch (error) {
         console.log(error);
         throw new Error("Erro ao criar o pagamento");

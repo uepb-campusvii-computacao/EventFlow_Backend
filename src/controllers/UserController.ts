@@ -1,10 +1,10 @@
 import { StatusPagamento } from "@prisma/client";
 import { Request, Response } from "express";
 import jsonwebtoken from "jsonwebtoken";
+import { z, ZodError } from "zod";
 import { FindLoteIdAnduserIdParams } from "../interfaces/findLoteIdAnduserIdParams";
 import { UpdatePaymentStatusParams } from "../interfaces/updatePaymentStatusParams";
 import { UserLoginParams } from "../interfaces/userLoginParams";
-import { z, ZodError } from "zod";
 import { prisma } from "../lib/prisma";
 import LoteRepository from "../repositories/LoteRepository";
 import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
@@ -22,7 +22,6 @@ import { encryptPassword } from "../services/user/encryptPassword";
 import { UserService } from "../services/user/user.service";
 
 export default class UserController {
-  
   static async loginUser(req: Request, res: Response) {
     const params: UserLoginParams = req.body;
 
@@ -200,20 +199,23 @@ export default class UserController {
     }
   }
   static async paymentUpdateCard(req: Request, res: Response) {
-    console.log("Requisitando pagamento do cartão de crédito...")
+    console.log("Requisitando pagamento do cartão de crédito...");
     try {
       const { lote_id, user_id } = req.params;
       const { action } = req.body;
-      console.log(action)
+      console.log(action);
       if (action === "payment.created" || action === "payment.updated") {
         const [res, user_inscricao] = await Promise.all([
           getPaymentStatusForInscricao(user_id, lote_id),
           UserInscricaoRepository.findUserInscricaoById(user_id, lote_id),
         ]);
-        console.log(`Pagamento atualizado: ${res}`)
+        console.log(`Pagamento atualizado: ${res}`);
         if (
           //isso ta feio: refatore isso
-          res.status && res.status_detail && res.payment_type_id && res.last_four_digits &&
+          res.status &&
+          res.status_detail &&
+          res.payment_type_id &&
+          res.last_four_digits &&
           user_inscricao?.status_pagamento !== StatusPagamento.GRATUITO
         ) {
           await UserInscricaoRepository.changeStatusPagamentoCard(
@@ -387,7 +389,6 @@ export default class UserController {
     }
   }
 
-
   static async findUser(req: Request, res: Response) {
     try {
       const { id } = res.locals;
@@ -498,6 +499,11 @@ export default class UserController {
               email: true,
             },
           },
+          lote: {
+            select: {
+              uuid_evento: true,
+            },
+          },
           id_payment_mercado_pago: true,
         },
       });
@@ -506,7 +512,10 @@ export default class UserController {
 
       for (const item of user_inscricao) {
         if (item.id_payment_mercado_pago) {
-          const pagamento = await getPayment(item.id_payment_mercado_pago);
+          const pagamento = await getPayment(
+            item.id_payment_mercado_pago,
+            item.lote.uuid_evento
+          );
           pagamentos.push(item, pagamento);
         }
       }
@@ -521,23 +530,24 @@ export default class UserController {
   static async getUserInscricao(req: Request, res: Response) {
     try {
       const { user_id, lote_id } = req.params;
-  
+
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
-  
+
+      const { uuid_evento } = await LoteRepository.findLoteById(lote_id);
+
       if (user_inscricao?.id_payment_mercado_pago) {
         const payment = await getPayment(
-          user_inscricao!.id_payment_mercado_pago
+          user_inscricao!.id_payment_mercado_pago,
+          uuid_evento
         );
-  
+
         return res.status(200).json(payment);
       }
-  
+
       return res.status(200).json({ message: "Inscrição Gratuita" });
     } catch (error) {
       return res.status(400).send(error);
     }
   }
 }
-
- 

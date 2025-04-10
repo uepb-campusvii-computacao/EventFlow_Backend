@@ -19,9 +19,7 @@ export default class EventController {
   static async createNewPayment(req: Request, res: Response) {
     try {
       const registerUserInEventSchema = z.object({
-        atividades: z
-          .array(z.string()) 
-          .optional(),
+        atividades: z.array(z.string()).optional(),
         paymentData: z
           .object({
             token: z.string(),
@@ -79,11 +77,7 @@ export default class EventController {
   static async registerParticipanteInEvent(req: Request, res: Response) {
     try {
       const registerUserInEventSchema = z.object({
-        atividades: z
-          .array(
-            z.string()
-          )
-          .optional(),
+        atividades: z.array(z.string()).optional(),
         paymentData: z
           .object({
             token: z.string(),
@@ -141,9 +135,7 @@ export default class EventController {
   static async registerMultipleUsersInEvent(req: Request, res: Response) {
     try {
       const registerUserInEventSchema = z.object({
-        atividades: z
-          .array(z.string())
-          .optional(),
+        atividades: z.array(z.string()).optional(),
         usersIds: z.array(z.string()).min(1).max(2),
         paymentData: z
           .object({
@@ -407,7 +399,10 @@ export default class EventController {
           let transaction_data = null;
           if (item.id_payment_mercado_pago) {
             try {
-              transaction_data = await getPayment(item.id_payment_mercado_pago);
+              transaction_data = await getPayment(
+                item.id_payment_mercado_pago,
+                event_id
+              );
             } catch (error) {
               console.error("Erro ao obter dados do pagamento:", error);
             }

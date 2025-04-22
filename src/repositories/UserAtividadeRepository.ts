@@ -52,7 +52,7 @@ export default class UserAtividadeRepository {
             },
           },
         });
-  
+
         if (!activity) {
           throw new Error("Atividade não encontrada");
         }
@@ -86,14 +86,12 @@ export default class UserAtividadeRepository {
             uuid_atividade: item,
           },
         });
-  
       } catch (error) {
         console.error(`Erro ao registrar na atividade ${item}`);
         throw error; // Lança o erro novamente para quem chamou a função
       }
     }
   }
-  
 
   static async changeUserAtividade(
     uuid_atividade_atual: string,

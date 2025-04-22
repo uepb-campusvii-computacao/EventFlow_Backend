@@ -4,7 +4,10 @@ import { CreateOrderParams } from "../interfaces/createOrderParams";
 import OrderRepository from "../repositories/OrderRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { createPaymentMarketPlace } from "../services/payments/createPaymentMarketPlace";
-import { getPayment, getPaymentStatusForVenda } from "../services/payments/getPayment";
+import {
+  getPayment,
+  getPaymentStatusForVenda,
+} from "../services/payments/getPayment";
 
 export async function createOrder(req: Request, res: Response) {
   try {
@@ -30,7 +33,10 @@ export async function getOrders(req: Request, res: Response) {
     // Mapear as vendas para obter os detalhes do pagamento de forma assíncrona
     const response = await Promise.all(
       vendas.map(async (item) => {
-        const data = await getPayment(item.pagamento.id_payment_mercado_pago);
+        const data = await getPayment(
+          item.uuid_pagamento,
+          item.produto.uuid_evento
+        );
 
         return {
           ...item.pagamento,
@@ -38,7 +44,6 @@ export async function getOrders(req: Request, res: Response) {
         };
       })
     );
-
 
     return res.status(200).json(response);
   } catch (error) {
@@ -53,15 +58,20 @@ export async function getOrdersByUserAndProduct(req: Request, res: Response) {
   try {
     const { user_id, produto_id } = req.params;
 
-    const orders = await OrderRepository.findOrderByUserIdAndProductId(user_id, produto_id);
+    const orders = await OrderRepository.findOrderByUserIdAndProductId(
+      user_id,
+      produto_id
+    );
 
-    return res.status(200).json(orders.map(item => ({
-      data_criacao: item.data_criacao,
-      data_pagamento: item.data_pagamento,
-      status_pagamento: item.vendas[0].pagamento.status_pagamento,
-      quantidade: item.vendas[0].quantidade,
-      valor_total: item.valor_total,
-    })));
+    return res.status(200).json(
+      orders.map((item) => ({
+        data_criacao: item.data_criacao,
+        data_pagamento: item.data_pagamento,
+        status_pagamento: item.vendas[0].pagamento.status_pagamento,
+        quantidade: item.vendas[0].quantidade,
+        valor_total: item.valor_total,
+      }))
+    );
   } catch (error) {
     if (error instanceof Error) {
       return res.status(400).send(error.message);
@@ -78,11 +88,14 @@ export async function realizarPagamentoVenda(req: Request, res: Response) {
     if (action === "payment.updated") {
       const [status, user_inscricao] = await Promise.all([
         getPaymentStatusForVenda(pagamento_id),
-        UserInscricaoRepository.findUserInscricaoByMercadoPagoId(pagamento_id)
+        UserInscricaoRepository.findUserInscricaoByMercadoPagoId(pagamento_id),
       ]);
 
-      if (status && user_inscricao?.status_pagamento !== StatusPagamento.GRATUITO) {
-        console.log(status, user_inscricao?.status_pagamento)
+      if (
+        status &&
+        user_inscricao?.status_pagamento !== StatusPagamento.GRATUITO
+      ) {
+        console.log(status, user_inscricao?.status_pagamento);
         await OrderRepository.changeVendaStatusPagamento(pagamento_id, status);
       }
     }

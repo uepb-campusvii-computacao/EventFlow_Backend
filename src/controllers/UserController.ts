@@ -550,4 +550,20 @@ export default class UserController {
       return res.status(400).send(error);
     }
   }
+  static async profile(req: Request, res: Response) {
+    try {
+      const { id } = res.locals;
+
+      const user = await UserService.getProfile(id);
+
+      res.status(200).json(user);
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+      return res
+        .status(500)
+        .json({ message: "Um erro inesperado aconteceu", error: error });
+    }
+  }
 }

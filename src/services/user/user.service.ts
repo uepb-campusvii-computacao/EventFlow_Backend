@@ -39,9 +39,12 @@ export class UserService {
 
     const { nome, nome_cracha, email, instituicao, cpf, active } = user;
 
-    const userCpf = cpf.replace(/^(\d{3}).*\D(\d{2})$/, (middle) => {
-      return `***${middle}**`;
-    });
+    const cleanCpf = cpf.replace(/[^\d]/g, "");
+
+    const userCpf = cleanCpf.replace(
+      /^\d{3}(\d{3})(\d{3})\d{2}$/,
+      "***.$1.$2-**"
+    );
 
     return { nome, nome_cracha, email, instituicao, cpf: userCpf, active };
   }

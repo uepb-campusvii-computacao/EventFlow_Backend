@@ -261,4 +261,30 @@ export default class UserEventRepository {
       });
     });
   }
+
+  public static async findAllUserEvents(userId: string) {
+    const userEvents = await prisma.userEvento.findMany({
+      where: {
+        uuid_user: userId,
+      },
+      orderBy: {
+        evento: {
+          date: "asc",
+        },
+      },
+      select: {
+        uuid_evento: true,
+        evento: {
+          select: {
+            nome: true,
+            active: true,
+            date: true,
+            banner_img_url: true,
+          },
+        },
+      },
+    });
+
+    return userEvents;
+  }
 }

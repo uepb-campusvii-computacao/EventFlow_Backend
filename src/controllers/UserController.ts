@@ -566,4 +566,20 @@ export default class UserController {
         .json({ message: "Um erro inesperado aconteceu", error: error });
     }
   }
+
+  static async getUserEvents(req: Request, res: Response) {
+    try {
+      const { id } = res.locals;
+
+      const userEvents = await UserService.getUserEvents(id);
+
+      if (!userEvents) {
+        return res.status(404).json({ message: "Eventos não encontrados" });
+      }
+
+      res.status(200).json(userEvents);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
 }

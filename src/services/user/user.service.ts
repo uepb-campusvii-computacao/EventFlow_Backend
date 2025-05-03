@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import UserEventRepository from "../../repositories/UserEventRepository";
 import UserRepository from "../../repositories/UserRepository";
 import { encryptPassword } from "./encryptPassword";
 
@@ -47,5 +48,25 @@ export class UserService {
     );
 
     return { nome, nome_cracha, email, instituicao, cpf: userCpf, active };
+  }
+
+  public static async getUserEvents(userId: string) {
+    const userEvents = await UserEventRepository.findAllUserEvents(userId);
+
+    if (!userEvents) {
+      throw new Error("User events not found");
+    }
+
+    const events = userEvents.map(({ uuid_evento, evento }) => {
+      return {
+        id: uuid_evento,
+        nome: evento.nome,
+        data: evento.date,
+        ativo: evento.active,
+        banner: evento.banner_img_url,
+      };
+    });
+
+    return events;
   }
 }

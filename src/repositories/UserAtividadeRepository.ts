@@ -1,4 +1,4 @@
-import { Prisma, TipoAtividade } from "@prisma/client";
+import { Prisma, TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { RegisterParticipanteParams } from "../interfaces/registerParticipanteParams";
 import { prisma } from "../lib/prisma";
 import ActivityRepository from "./ActivityRepository";
@@ -18,7 +18,6 @@ export default class UserAtividadeRepository {
     user_uuid: string,
     atividades: RegisterParticipanteParams["atividades"]
   ) {
-
     const activities = await prisma.atividade.findMany({
       where: {
         uuid_atividade: {
@@ -38,7 +37,6 @@ export default class UserAtividadeRepository {
 
     for (const item of atividades || []) {
       try {
-
         // Verifica se a atividade existe
         const activity = await tx.atividade.findUnique({
           where: {
@@ -64,7 +62,6 @@ export default class UserAtividadeRepository {
         ) {
           throw new Error(`A atividade ${activity.nome} está cheia`);
         }
-
 
         // Verifica se o usuário já está inscrito em outra atividade do mesmo tipo no mesmo turno
         const conflictingActivity = activities.find(
@@ -111,10 +108,48 @@ export default class UserAtividadeRepository {
     console.log("Atualizada com sucesso!");
   }
 
-  static async findActivitiesByUserId(uuid_user: string) {
+  static async findActivitiesByUserId(
+    uuid_user: string,
+    {
+      nome,
+      turno,
+      tipo_atividade,
+      presenca,
+      data_fim,
+      data_inicio,
+      evento,
+    }: {
+      nome?: string;
+      tipo_atividade?: TipoAtividade[];
+      turno?: TurnoAtividade[];
+      presenca?: boolean;
+      data_inicio?: Date;
+      data_fim?: Date;
+      evento?: string;
+    }
+  ) {
     const response = await prisma.userAtividade.findMany({
       where: {
         uuid_user,
+        presenca,
+        atividade: {
+          nome: {
+            contains: nome,
+          },
+          turno: {
+            in: turno,
+          },
+          tipo_atividade: {
+            in: tipo_atividade,
+          },
+          date: {
+            gte: data_inicio,
+            lte: data_fim,
+          },
+          evento: {
+            uuid_evento: evento,
+          },
+        },
       },
       select: {
         atividade: {
@@ -122,6 +157,14 @@ export default class UserAtividadeRepository {
             uuid_atividade: true,
             nome: true,
             tipo_atividade: true,
+            turno: true,
+            date: true,
+            descricao: true,
+            evento: {
+              select: {
+                nome: true,
+              },
+            },
           },
         },
         presenca: true,

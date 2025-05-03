@@ -1,4 +1,4 @@
-import { StatusPagamento } from "@prisma/client";
+import { StatusPagamento, TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { Request, Response } from "express";
 import jsonwebtoken from "jsonwebtoken";
 import { z, ZodError } from "zod";
@@ -7,7 +7,6 @@ import { UpdatePaymentStatusParams } from "../interfaces/updatePaymentStatusPara
 import { UserLoginParams } from "../interfaces/userLoginParams";
 import { prisma } from "../lib/prisma";
 import LoteRepository from "../repositories/LoteRepository";
-import UserAtividadeRepository from "../repositories/UserAtividadeRepository";
 import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import UserRepository from "../repositories/UserRepository";
 import { sendPasswordResetEmail } from "../services/emailService";
@@ -291,9 +290,7 @@ export default class UserController {
     try {
       const { user_id, lote_id } = req.params;
 
-      const atividades = await UserAtividadeRepository.findActivitiesByUserId(
-        user_id
-      );
+      const atividades = await UserService.getUserActivities(user_id);
       const user = await UserRepository.findUserById(user_id);
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoById(user_id, lote_id);
@@ -313,7 +310,7 @@ export default class UserController {
         atividades: atividades.map((atividade) => ({
           nome: atividade.nome,
           tipo_atividade: atividade.tipo_atividade,
-          uuid_atividade: atividade.uuid_atividade,
+          uuid_atividade: atividade.id,
         })),
       };
 
@@ -331,9 +328,7 @@ export default class UserController {
         user_id
       );
 
-      const activities = await UserAtividadeRepository.findActivitiesByUserId(
-        user_id
-      );
+      const activities = await UserService.getUserActivities(user_id);
 
       const user_inscricao =
         await UserInscricaoRepository.findUserInscricaoByEventId(
@@ -578,6 +573,51 @@ export default class UserController {
       }
 
       res.status(200).json(userEvents);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
+
+  static async getUserActivities(req: Request, res: Response) {
+    try {
+      const requestBodySchema = z.object({
+        nome: z.string().optional(),
+        tipo_atividade: z.array(z.nativeEnum(TipoAtividade)).optional(),
+        turno: z.array(z.nativeEnum(TurnoAtividade)).optional(),
+        presenca: z.boolean().optional(),
+        data_inicio: z.date().optional(),
+        data_fim: z.date().optional(),
+        evento: z.string().optional(),
+      });
+
+      const {
+        nome,
+        data_fim,
+        data_inicio,
+        evento,
+        presenca,
+        tipo_atividade,
+        turno,
+      } = requestBodySchema.parse(req.body);
+
+      const { id } = res.locals;
+
+      const userActivities = await UserService.getUserActivities(
+        id,
+        nome,
+        tipo_atividade,
+        turno,
+        presenca,
+        data_inicio,
+        data_fim,
+        evento
+      );
+
+      if (!userActivities) {
+        return res.status(404).json({ message: "Atividades não encontradas" });
+      }
+
+      res.status(200).json(userActivities);
     } catch (error) {
       res.status(400).send(error);
     }

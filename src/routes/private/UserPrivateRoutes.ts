@@ -45,4 +45,9 @@ UserPrivateRoutes.get("/user/profile", UserController.profile);
 
 UserPrivateRoutes.get("/user/profile/events", UserController.getUserEvents);
 
+UserPrivateRoutes.get(
+  "/user/profile/activities",
+  UserController.getUserActivities
+);
+
 export default UserPrivateRoutes;

@@ -1,4 +1,6 @@
+import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { randomUUID } from "crypto";
+import UserAtividadeRepository from "../../repositories/UserAtividadeRepository";
 import UserEventRepository from "../../repositories/UserEventRepository";
 import UserRepository from "../../repositories/UserRepository";
 import { encryptPassword } from "./encryptPassword";
@@ -68,5 +70,59 @@ export class UserService {
     });
 
     return events;
+  }
+
+  public static async getUserActivities(
+    userId: string,
+    nome?: string,
+    tipo_atividade?: TipoAtividade[],
+    turno?: TurnoAtividade[],
+    presenca?: boolean,
+    data_inicio?: Date,
+    data_fim?: Date,
+    evento?: string
+  ) {
+    const userActivities = await UserAtividadeRepository.findActivitiesByUserId(
+      userId,
+      {
+        nome,
+        turno,
+        tipo_atividade,
+        presenca,
+        data_fim,
+        data_inicio,
+        evento,
+      }
+    );
+
+    if (!userActivities) {
+      throw new Error("User activities not found");
+    }
+
+    const activities = userActivities.map(
+      ({
+        nome,
+        presenca,
+        tipo_atividade,
+        uuid_atividade,
+        turno,
+        date,
+        descricao,
+        evento,
+      }) => {
+        return {
+          id: uuid_atividade,
+          nome,
+          evento: evento.nome,
+          descricao,
+          tipo_atividade,
+          presenca,
+          date,
+          turno,
+        };
+      }
+    );
+
+    return activities;
   }
 }

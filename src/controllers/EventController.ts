@@ -14,6 +14,7 @@ import { getPayment } from "../services/payments/getPayment";
 import { checkPassword } from "../services/user/checkPassword";
 import { encryptPassword } from "../services/user/encryptPassword";
 import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
+import { registrationQueue } from "../queues/registrationQueue";
 
 export default class EventController {
   static async createNewPayment(req: Request, res: Response) {
@@ -103,13 +104,12 @@ export default class EventController {
 
       const uuid_user = res.locals.id;
 
-      const perfil: Perfil = "PARTICIPANTE";
-      await UserEventRepository.registerUserInEvent({
-        uuid_user,
+      await registrationQueue.add("registerUser", {
+        user_id: uuid_user,
         lote_id,
-        perfil,
+        perfil: "PARTICIPANTE",
         atividades,
-        paymentInfo: paymentData,
+        paymentData: paymentData,
       });
 
       return res

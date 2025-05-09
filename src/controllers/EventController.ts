@@ -473,31 +473,31 @@ export default class EventController {
     }
   }
 
-  static async getAllActivitiesInEventByUser(req: Request, res: Response) {
-    try {
-      const { event_id } = req.params;
-      const { id } = res.locals;
+  // static async getAllActivitiesInEventByUser(req: Request, res: Response) {
+  //   try {
+  //     const { event_id } = req.params;
+  //     const { id } = res.locals;
 
-      const allActivities = await EventRepository.findAllUserActivities(
-        event_id,
-        id
-      );
+  //     const allActivities = await EventRepository.findAllUserActivities(
+  //       event_id,
+  //       id
+  //     );
 
-      const activityResults: Record<string, any[]> = {};
+  //     const activityResults: Record<string, any[]> = {};
 
-      allActivities.forEach((activity) => {
-        const type = activity.tipo_atividade.toLowerCase();
-        if (!activityResults[type]) {
-          activityResults[type] = [];
-        }
-        activityResults[type].push(activity);
-      });
+  //     allActivities.forEach((activity) => {
+  //       const type = activity.tipo_atividade.toLowerCase();
+  //       if (!activityResults[type]) {
+  //         activityResults[type] = [];
+  //       }
+  //       activityResults[type].push(activity);
+  //     });
 
-      return res.status(200).json(activityResults);
-    } catch (error) {
-      return res.status(400).send(error);
-    }
-  }
+  //     return res.status(200).json(activityResults);
+  //   } catch (error) {
+  //     return res.status(400).send(error);
+  //   }
+  // }
 
   static async getAllActivitiesInEventOrdenateByTipo(
     req: Request,

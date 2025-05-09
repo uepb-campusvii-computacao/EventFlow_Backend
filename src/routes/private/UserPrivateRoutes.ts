@@ -33,10 +33,10 @@ UserPrivateRoutes.put(
   ActivityController.upadateUserActivity
 );
 
-UserPrivateRoutes.get(
-  "/user/events/:event_id/my-activities",
-  EventController.getAllActivitiesInEventByUser
-);
+// UserPrivateRoutes.get(
+//   "/user/events/:event_id/my-activities",
+//   EventController.getAllActivitiesInEventByUser
+// );
 
 // caso queira desacoplar a criação de um usuário convidado do registro em um evento
 // UserPrivateRoutes.post("/user/registerGuest", UserController.registerGuest);

@@ -351,19 +351,19 @@ export default class EventController {
     }
   }
 
-  static async getAllEventsByIdUser(req: Request, res: Response) {
-    try {
-      const user_id = res.locals.id;
+  // static async getAllEventsByIdUser(req: Request, res: Response) {
+  //   try {
+  //     const user_id = res.locals.id;
 
-      const eventos = await UserInscricaoRepository.findAllEventsByUserId(
-        user_id
-      );
+  //     const eventos = await UserInscricaoRepository.findAllEventsByUserId(
+  //       user_id
+  //     );
 
-      return res.status(200).json(eventos);
-    } catch (error) {
-      return res.status(400).send("Informação incorreta");
-    }
-  }
+  //     return res.status(200).json(eventos);
+  //   } catch (error) {
+  //     return res.status(400).send("Informação incorreta");
+  //   }
+  // }
 
   static async getAllSubscribersInEvent(req: Request, res: Response) {
     try {

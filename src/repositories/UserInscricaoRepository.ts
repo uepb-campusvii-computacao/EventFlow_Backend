@@ -304,29 +304,29 @@ export default class UserInscricaoRepository {
     return all_subscribers;
   }
 
-  static async findAllEventsByUserId(uuid_user: string) {
-    try {
-      const eventos = await prisma.evento.findMany({
-        where: {
-          UserEvento: {
-            some: {
-              uuid_user,
-            },
-          },
-        },
-        select: {
-          uuid_evento: true,
-          nome: true,
-          date: true,
-        },
-      });
+  // static async findAllEventsByUserId(uuid_user: string) {
+  //   try {
+  //     const eventos = await prisma.evento.findMany({
+  //       where: {
+  //         UserEvento: {
+  //           some: {
+  //             uuid_user,
+  //           },
+  //         },
+  //       },
+  //       select: {
+  //         uuid_evento: true,
+  //         nome: true,
+  //         date: true,
+  //       },
+  //     });
 
-      return eventos;
-    } catch (error) {
-      console.error("Erro ao buscar eventos:", error);
-      throw error;
-    }
-  }
+  //     return eventos;
+  //   } catch (error) {
+  //     console.error("Erro ao buscar eventos:", error);
+  //     throw error;
+  //   }
+  // }
 
   static async removeActivityIfTypeNull(
     user_id: string,

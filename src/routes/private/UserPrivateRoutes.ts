@@ -21,7 +21,7 @@ UserPrivateRoutes.delete(
   UserController.deleteUser
 );
 
-UserPrivateRoutes.get("/user/my-events", EventController.getAllEventsByIdUser);
+// UserPrivateRoutes.get("/user/my-events", EventController.getAllEventsByIdUser);
 
 UserPrivateRoutes.get(
   "/user/in-event/:event_id",

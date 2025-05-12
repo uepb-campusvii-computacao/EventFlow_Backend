@@ -1,5 +1,6 @@
 import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { randomUUID } from "crypto";
+import slugify from "slugify";
 import UserAtividadeRepository from "../../repositories/UserAtividadeRepository";
 import UserEventRepository from "../../repositories/UserEventRepository";
 import UserRepository from "../../repositories/UserRepository";
@@ -62,6 +63,7 @@ export class UserService {
     const events = userEvents.map(({ uuid_evento, evento }) => {
       return {
         id: uuid_evento,
+        slug: slugify(evento.nome, { lower: true, strict: true }),
         nome: evento.nome,
         data: evento.date,
         ativo: evento.active,

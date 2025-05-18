@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import UserInscricaoRepository from "../../repositories/UserInscricaoRepository";
 import UserRepository from "../../repositories/UserRepository";
 import { encryptPassword } from "./encryptPassword";
 
@@ -28,5 +29,17 @@ export class UserService {
     const { senha, ...userWithoutPassword } = user;
 
     return userWithoutPassword;
+  }
+
+  public static async getAllUsersInEvent(eventId: string) {
+    try {
+      const users = await UserInscricaoRepository.getAllUsersInEvent(eventId);
+
+      if (!users) {
+        throw new Error("Users not found");
+      }
+
+      return users;
+    } catch (error) {}
   }
 }

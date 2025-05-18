@@ -231,7 +231,7 @@ export default class UserInscricaoRepository {
     status_pagamento: StatusPagamento,
     status_detail: string,
     payment_method: string,
-    last_four_digits: string,
+    last_four_digits: string
   ) {
     await prisma.userInscricao.update({
       where: {
@@ -434,15 +434,15 @@ export default class UserInscricaoRepository {
   }
 
   static async projectionTableCredenciamento(event_id: string) {
+    const lotes = await prisma.lote.findMany({
+      where: { uuid_evento: event_id },
+      select: { uuid_lote: true },
+    });
+
     const users = await prisma.userInscricao.findMany({
       where: {
         uuid_lote: {
-          in: await prisma.lote
-            .findMany({
-              where: { uuid_evento: event_id },
-              select: { uuid_lote: true },
-            })
-            .then((lotes) => lotes.map((lote) => lote.uuid_lote)),
+          in: lotes.map((lote) => lote.uuid_lote),
         },
       },
       select: {
@@ -476,6 +476,38 @@ export default class UserInscricaoRepository {
       credenciamento: userInscricao.credenciamento,
       instituicao: userInscricao.usuario.instituicao,
     }));
+  }
+
+  static async getAllUsersInEvent(event_id: string) {
+    try {
+      const users = await prisma.userInscricao.findMany({
+        where: {
+          lote: {
+            uuid_evento: event_id,
+          },
+          status_pagamento: {
+            in: [StatusPagamento.REALIZADO, StatusPagamento.GRATUITO],
+          },
+        },
+        include: {
+          usuario: true,
+          lote: true,
+        },
+      });
+
+      return users.map((userInscricao) => ({
+        uuid_user: userInscricao.usuario.uuid_user,
+        nome: userInscricao.usuario.nome,
+        nome_cracha: userInscricao.usuario.nome_cracha,
+        email: userInscricao.usuario.email,
+        status_pagamento: userInscricao.status_pagamento,
+        credenciamento: userInscricao.credenciamento,
+        instituicao: userInscricao.usuario.instituicao,
+        lote: userInscricao.lote,
+      }));
+    } catch (error) {
+      throw error;
+    }
   }
 
   static async findUserInscriptionStatus(event_id: string) {

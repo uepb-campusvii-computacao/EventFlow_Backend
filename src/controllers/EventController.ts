@@ -13,6 +13,7 @@ import UserInscricaoRepository from "../repositories/UserInscricaoRepository";
 import { getPayment } from "../services/payments/getPayment";
 import { checkPassword } from "../services/user/checkPassword";
 import { encryptPassword } from "../services/user/encryptPassword";
+import { UserService } from "../services/user/user.service";
 import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
 
 export default class EventController {
@@ -379,6 +380,33 @@ export default class EventController {
       return res.status(200).json({ all_subscribers });
     } catch (error) {
       console.log(error);
+      return res.status(400).send(error);
+    }
+  }
+
+  static async getAllSubsToDrawLotsInEvent(req: Request, res: Response) {
+    try {
+      const { event_id } = req.params;
+
+      const allSubscribers = await UserService.getAllUsersInEvent(event_id);
+
+      if (!allSubscribers) {
+        return res.status(400).send("Evento não encontrado");
+      }
+
+      const allLotes = await LoteRepository.getAllLotesByEventID(event_id);
+
+      return res.status(200).json({
+        lotes: allLotes.map((lote) => ({
+          uuid_lote: lote.uuid_lote,
+          nome: lote.nome,
+        })),
+        allSubscribers: allSubscribers.map((subscriber) => ({
+          nome: subscriber.nome,
+          lote: subscriber.lote.uuid_lote,
+        })),
+      });
+    } catch (error) {
       return res.status(400).send(error);
     }
   }

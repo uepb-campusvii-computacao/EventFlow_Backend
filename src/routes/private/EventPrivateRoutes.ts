@@ -27,6 +27,12 @@ EventPrivateRoutes.get(
   EventController.getAllSubscribersInEvent
 );
 
+EventPrivateRoutes.get(
+  "/events/:event_id/sorteio",
+  verifyAdminUserRoleInEvent,
+  EventController.getAllSubsToDrawLotsInEvent
+);
+
 EventPrivateRoutes.put(
   "/events/:event_id/inscricoes/credenciamento/:user_id",
   verifyAdminUserRoleInEvent,

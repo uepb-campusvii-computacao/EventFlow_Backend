@@ -15,6 +15,8 @@ import { checkPassword } from "../services/user/checkPassword";
 import { encryptPassword } from "../services/user/encryptPassword";
 import { UserService } from "../services/user/user.service";
 import { UserInscricaoService } from "../services/userInscricao/userInscricao.service";
+import { registrationQueue } from "../queues/registrationQueue";
+import { QueueEvents } from "bullmq";
 
 export default class EventController {
   static async createNewPayment(req: Request, res: Response) {
@@ -76,6 +78,7 @@ export default class EventController {
   }
 
   static async registerParticipanteInEvent(req: Request, res: Response) {
+    const registrationQueueEvents = new QueueEvents("registrationQueue");
     try {
       const registerUserInEventSchema = z.object({
         atividades: z.array(z.string()).optional(),
@@ -101,21 +104,31 @@ export default class EventController {
         req.body
       );
       const { lote_id } = req.params;
+      
 
       const uuid_user = res.locals.id;
+      console.log("uuid_user", uuid_user);
 
-      const perfil: Perfil = "PARTICIPANTE";
-      await UserEventRepository.registerUserInEvent({
+      const job = await registrationQueue.add("registerUser", {
         uuid_user,
         lote_id,
-        perfil,
+        perfil: "PARTICIPANTE",
         atividades,
-        paymentInfo: paymentData,
+        paymentData: paymentData,
       });
 
-      return res
-        .status(200)
-        .json({ message: "Usuário cadastrado com sucesso!" });
+try {
+         const result = await job.waitUntilFinished(registrationQueueEvents);
+        return res.status(200).json({
+          message: "Usuário cadastrado com sucesso!",
+          result,
+        });
+      } catch (error) {
+        return res.status(400).json({
+          message: "Falha ao processar o cadastro do usuário.",
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.errors.map((err) => ({

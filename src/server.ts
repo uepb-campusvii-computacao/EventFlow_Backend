@@ -1,15 +1,29 @@
 import cors from "cors";
 import * as dotenv from 'dotenv';
 import express from "express";
+import { ExpressAdapter } from "@bull-board/express";
+import { createBullBoard } from "@bull-board/api";
+import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import { registrationQueue } from "./queues/registrationQueue";
 import swaggerUi from "swagger-ui-express";
 import SwaggerDocs from "../src/swagger.json";
 import { checkToken } from "./middlewares/ensureAuthenticate";
 import router from "./routes";
+
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
+        const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath("/admin/queues");
+
+createBullBoard({
+  queues: [new BullMQAdapter(registrationQueue)],
+  serverAdapter,
+});
+
+app.use("/admin/queues", serverAdapter.getRouter());
 
 app.use("/doc-api",checkToken, swaggerUi.serve, swaggerUi.setup(SwaggerDocs))
 

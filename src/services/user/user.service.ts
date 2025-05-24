@@ -41,7 +41,7 @@ export class UserService {
       throw new Error("User not found");
     }
 
-    const { nome, nome_cracha, email, instituicao, cpf, active } = user;
+    const { uuid_user, nome, nome_cracha, email, instituicao, cpf, active } = user;
 
     const cleanCpf = cpf.replace(/[^\d]/g, "");
 
@@ -50,7 +50,7 @@ export class UserService {
       "***.$1.$2-**"
     );
 
-    return { nome, nome_cracha, email, instituicao, cpf: userCpf, active };
+    return { id: uuid_user, nome, nome_cracha, email, instituicao, cpf: userCpf, active };
   }
 
   public static async getUserEvents(userId: string) {

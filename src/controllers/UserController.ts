@@ -622,4 +622,45 @@ export default class UserController {
       res.status(400).send(error);
     }
   }
+
+  static async updateActivities(req: Request, res: Response) {
+    try {
+      const updateActivitiesSchema = z.object({
+        atividadesAntigas: z.array(
+          z.object({
+            id: z.string(),
+            tipo: z.nativeEnum(TipoAtividade),
+            turno: z.nativeEnum(TurnoAtividade),
+          })
+        ),
+        atividadesNovas: z.array(
+          z.object({
+            id: z.string(),
+            tipo: z.nativeEnum(TipoAtividade),
+            turno: z.nativeEnum(TurnoAtividade),
+          })
+        ),
+      });
+
+      const { user_id } = req.params;
+      const { atividadesAntigas, atividadesNovas } =
+        updateActivitiesSchema.parse(req.body);
+
+      const updatedActivities = await UserService.updateActivities(
+        user_id,
+        atividadesAntigas,
+        atividadesNovas
+      );
+
+      if (!updatedActivities) {
+        return res.status(403).json({ message: "Erro ao alterar Atividades" });
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Atividades atualizadas com sucesso!" });
+    } catch (error) {
+      return res.status(400).send(error);
+    }
+  }
 }

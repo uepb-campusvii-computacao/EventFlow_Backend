@@ -7,9 +7,19 @@ export default class ActivityRepository {
       where: {
         uuid_atividade,
       },
+      include: {
+        _count: {
+          select: {
+            userAtividade: true,
+          },
+        },
+      },
     });
 
-    return activity;
+    return {
+      ...activity,
+      _count: activity._count.userAtividade,
+    };
   }
 
   static async findActivityPubInfoById(uuid_atividade: string) {

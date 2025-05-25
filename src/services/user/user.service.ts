@@ -1,6 +1,7 @@
 import { TipoAtividade, TurnoAtividade } from "@prisma/client";
 import { randomUUID } from "crypto";
 import slugify from "slugify";
+import ActivityRepository from "../../repositories/ActivityRepository";
 import UserAtividadeRepository from "../../repositories/UserAtividadeRepository";
 import UserEventRepository from "../../repositories/UserEventRepository";
 import UserRepository from "../../repositories/UserRepository";
@@ -41,7 +42,8 @@ export class UserService {
       throw new Error("User not found");
     }
 
-    const { uuid_user, nome, nome_cracha, email, instituicao, cpf, active } = user;
+    const { uuid_user, nome, nome_cracha, email, instituicao, cpf, active } =
+      user;
 
     const cleanCpf = cpf.replace(/[^\d]/g, "");
 
@@ -50,7 +52,15 @@ export class UserService {
       "***.$1.$2-**"
     );
 
-    return { id: uuid_user, nome, nome_cracha, email, instituicao, cpf: userCpf, active };
+    return {
+      id: uuid_user,
+      nome,
+      nome_cracha,
+      email,
+      instituicao,
+      cpf: userCpf,
+      active,
+    };
   }
 
   public static async getUserEvents(userId: string) {
@@ -126,5 +136,99 @@ export class UserService {
     );
 
     return activities;
+  }
+
+  public static async updateActivities(
+    userId: string,
+    oldActivities: { id: string; tipo: TipoAtividade; turno: TurnoAtividade }[],
+    newActivities: { id: string; tipo: TipoAtividade; turno: TurnoAtividade }[]
+  ) {
+    try {
+      const existingActivities = await Promise.all([
+        ...newActivities.map((activity) => {
+          return ActivityRepository.findActivityById(activity.id);
+        }),
+        ...oldActivities.map((activity) => {
+          return ActivityRepository.findActivityById(activity.id);
+        }),
+      ]);
+
+      if (!existingActivities) {
+        throw new Error("Atividade não encontrada");
+      }
+
+      for (const newActivity of newActivities) {
+        const existingActivity = existingActivities.find(
+          (act) => act?.uuid_atividade === newActivity.id
+        );
+
+        if (existingActivity) {
+          if (
+            existingActivity.max_participants &&
+            existingActivity._count >= existingActivity.max_participants
+          ) {
+            throw new Error(
+              `A atividade "${existingActivity.nome}" atingiu o número máximo de inscritos.`
+            );
+          }
+        }
+      }
+
+      const checkForDuplicates = (
+        activities: { tipo: TipoAtividade; turno: TurnoAtividade }[]
+      ) => {
+        const seen = new Set<string>();
+        activities.forEach((activity) => {
+          const key = `${activity.tipo}-${activity.turno}`;
+          if (seen.has(key)) {
+            return true;
+          }
+          seen.add(key);
+        });
+        return false;
+      };
+
+      if (checkForDuplicates(oldActivities)) {
+        throw new Error(
+          "Existem atividades duplicadas (mesmo tipo e turno) na lista de atividades antigas."
+        );
+      }
+
+      if (checkForDuplicates(newActivities)) {
+        throw new Error(
+          "Existem atividades duplicadas (mesmo tipo e turno) na lista de atividades novas."
+        );
+      }
+
+      const oldActivitiesIds = oldActivities.map((activity) => activity.id);
+      const newActivitiesIds = newActivities.map((activity) => activity.id);
+
+      const activitiesToRemove = oldActivitiesIds.filter(
+        (id) => !newActivitiesIds.includes(id)
+      );
+      const activitiesToAdd = newActivitiesIds.filter(
+        (id) => !oldActivitiesIds.includes(id)
+      );
+
+      await Promise.all([
+        ...activitiesToRemove.map((activityId) =>
+          UserAtividadeRepository.deleteUserAtividade(userId, activityId)
+        ),
+        ...activitiesToAdd.map((activityId) =>
+          UserAtividadeRepository.createUserAtividade(userId, activityId)
+        ),
+      ]);
+
+      console.log("Activities added:", activitiesToAdd);
+      console.log("Activities removed:", activitiesToRemove);
+
+      const updatedActivites =
+        await UserAtividadeRepository.findActivitiesByUserId(userId, {});
+
+      return updatedActivites;
+    } catch (error) {
+      console.error("Error updating activities:", error);
+      throw error;
+    }
   }
 }

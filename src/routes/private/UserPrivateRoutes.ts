@@ -33,6 +33,11 @@ UserPrivateRoutes.put(
   ActivityController.upadateUserActivity
 );
 
+UserPrivateRoutes.put(
+  "/user/:user_id/atividades",
+  UserController.updateActivities
+);
+
 // UserPrivateRoutes.get(
 //   "/user/events/:event_id/my-activities",
 //   EventController.getAllActivitiesInEventByUser

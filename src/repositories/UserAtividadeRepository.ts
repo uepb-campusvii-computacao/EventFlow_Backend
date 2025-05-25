@@ -355,4 +355,15 @@ export default class UserAtividadeRepository {
       },
     });
   }
+
+  static async deleteUserAtividade(uuid_user: string, uuid_atividade: string) {
+    await prisma.userAtividade.delete({
+      where: {
+        uuid_user_uuid_atividade: {
+          uuid_user,
+          uuid_atividade,
+        },
+      },
+    });
+  }
 }
